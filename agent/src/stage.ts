@@ -40,14 +40,55 @@ async function confirm(h: Hash, label: string) {
   return r;
 }
 
+/**
+ * Monad’s public RPC is load-balanced. A node that has not yet seen a transfer that just confirmed
+ * makes the next step’s gas estimate revert (“insufficient balance”), which used to abort a run halfway.
+ * Every send goes through this retry instead.
+ */
+async function send<T>(fn: () => Promise<T>, tries = 8): Promise<T> {
+  for (let i = 0; ; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (i >= tries - 1) throw e;
+      await Bun.sleep(700);
+    }
+  }
+}
+
+const tokenBalance = (a: `0x${string}`) =>
+  pub.readContract({ address: ADDRESSES.token, abi: ABI.token, functionName: "balanceOf", args: [a] }) as Promise<bigint>;
+
+/** Read a balance through the same lag: take the highest of a few reads, or wait until it is non-zero when we expect funds. */
+async function settledBalance(a: `0x${string}`, expectFunds: boolean): Promise<bigint> {
+  let best = 0n;
+  for (let i = 0; i < (expectFunds ? 15 : 3); i++) {
+    const b = await tokenBalance(a).catch(() => 0n);
+    if (b > best) best = b;
+    if (expectFunds && best > 0n) break;
+    await Bun.sleep(400);
+  }
+  return best;
+}
+
+/** A demo wallet that ran out of gas (e.g. a step was run twice) gets a small top-up from the onramp instead of failing. */
+async function ensureGas(w: Wallets, account: PrivateKeyAccount, need = parseEther("0.02")) {
+  if ((await pub.getBalance({ address: account.address })) >= need) return;
+  await Bun.sleep(2500); // keep the value transfer apart from other onramp transactions (reserve rule)
+  await confirm(await send(() => wallet(w.funder).sendTransaction({ to: account.address, value: parseEther("0.05") })), `gas top-up for ${account.address.slice(0, 8)}`);
+  await Bun.sleep(1500);
+}
+
 async function transferToken(from: PrivateKeyAccount, to: `0x${string}`, amount: bigint, nonce?: number) {
-  return wallet(from).writeContract({
-    address: ADDRESSES.token,
-    abi: ABI.token,
-    functionName: "transfer",
-    args: [to, amount],
-    nonce,
-  });
+  return send(() =>
+    wallet(from).writeContract({
+      address: ADDRESSES.token,
+      abi: ABI.token,
+      functionName: "transfer",
+      args: [to, amount],
+      nonce,
+    }),
+  );
 }
 
 async function setup(w: Wallets) {
@@ -66,7 +107,8 @@ async function setup(w: Wallets) {
   let nonce = await pub.getTransactionCount({ address: f.address, blockTag: "pending" });
   const gas: Hash[] = [];
   for (const r of ROLES) {
-    const target = r === "agent" ? parseEther("0.4") : parseEther("0.04"); // a full run uses well under half of this
+    // agent posts verdicts; ransom sends 4 splits; cash-out approves + deposits; the rest send once
+    const target = parseEther(r === "agent" ? "0.4" : r === "ransom" || r === "cashout" ? "0.08" : "0.05"); // a full run uses well under half of this
     const bal = await pub.getBalance({ address: w[r].address });
     if (bal >= target / 2n) continue;
     const h = await wallet(f).sendTransaction({ to: w[r].address, value: target - bal, nonce: nonce++ });
@@ -118,13 +160,16 @@ async function setup(w: Wallets) {
   for (const r of ROLES) console.log(`  ${r.padEnd(8)} ${w[r].address}`);
 }
 
-async function depositAtExchange(from: PrivateKeyAccount, amount: bigint, label: string) {
+async function depositAtExchange(w: Wallets, from: PrivateKeyAccount, wanted: bigint | "all", label: string) {
+  const amount = wanted === "all" ? await settledBalance(from.address, false) : wanted;
+  if (amount === 0n) throw new Error(`${label} has no dUSD to deposit yet (run the earlier step first)`);
+  await ensureGas(w, from, parseEther("0.03"));
   await confirm(
-    await wallet(from).writeContract({ address: ADDRESSES.token, abi: ABI.token, functionName: "approve", args: [ADDRESSES.exchange, amount] }),
+    await send(() => wallet(from).writeContract({ address: ADDRESSES.token, abi: ABI.token, functionName: "approve", args: [ADDRESSES.exchange, amount] })),
     `${label} approves exchange`,
   );
   const verdict = (await pub.readContract({ address: ADDRESSES.registry, abi: ABI.registry, functionName: "verdictOf", args: [from.address] })) as number;
-  const h = await wallet(from).writeContract({ address: ADDRESSES.exchange, abi: ABI.exchange, functionName: "deposit", args: [amount] });
+  const h = await send(() => wallet(from).writeContract({ address: ADDRESSES.exchange, abi: ABI.exchange, functionName: "deposit", args: [amount] }));
   const r = await confirm(h, `${label} deposits ${formatEther(amount)} dUSD`);
   const held = r.logs.some((l) => l.address.toLowerCase() === ADDRESSES.exchange.toLowerCase() && l.topics[0] === HELD_TOPIC);
   const name = ["CLEAN", "SUSPICIOUS", "MALICIOUS"][verdict];
@@ -136,27 +181,40 @@ const HELD_TOPIC = keccak256(toBytes("DepositHeld(uint256,address,uint256,uint8)
 /** The victim pays the ransom named in the note. */
 async function pay(w: Wallets) {
   console.log("\n== Victim pays the ransom ==");
+  await ensureGas(w, w.victim);
   await confirm(await transferToken(w.victim, w.ransom.address, RANSOM_AMOUNT), `victim -> ransom ${formatEther(RANSOM_AMOUNT)} dUSD`);
 }
 
 /** The attacker launders it: split across new wallets, recombine, move to a cash-out wallet. */
 async function launder(w: Wallets) {
+  // Resumable: every stage looks at what each wallet actually holds, so running it again after a failure
+  // (or after the victim paid twice) continues from where the money is instead of starting over.
   const hops = [w.hop1, w.hop2, w.hop3, w.hop4].slice(0, HOP_COUNT);
-  const share = RANSOM_AMOUNT / BigInt(HOP_COUNT);
 
   console.log("\n== Attacker splits it across new wallets ==");
-  const n = await pub.getTransactionCount({ address: w.ransom.address, blockTag: "pending" });
-  const splits = await Promise.all(hops.map((h, i) => transferToken(w.ransom, h.address, share, n + i)));
-  for (const [i, h] of splits.entries()) await confirm(h, `ransom -> hop${i + 1} ${formatEther(share)} dUSD`);
+  const ransomBal = await settledBalance(w.ransom.address, false);
+  if (ransomBal > 0n) {
+    await ensureGas(w, w.ransom, parseEther("0.035"));
+    const share = ransomBal / BigInt(hops.length);
+    const n = await pub.getTransactionCount({ address: w.ransom.address, blockTag: "pending" });
+    const amounts = hops.map((_, i) => (i === hops.length - 1 ? ransomBal - share * BigInt(hops.length - 1) : share));
+    const splits = await Promise.all(hops.map((h, i) => transferToken(w.ransom, h.address, amounts[i], n + i)));
+    for (const [i, h] of splits.entries()) await confirm(h, `ransom -> hop${i + 1} ${formatEther(amounts[i])} dUSD`);
+  } else log("ransom wallet is already empty: skipping the split");
 
   console.log("\n== ...and recombines it ==");
-  const merges = await Promise.all(hops.map((h) => transferToken(h, w.merge.address, share)));
-  for (const [i, h] of merges.entries()) await confirm(h, `hop${i + 1} -> merge ${formatEther(share)} dUSD`);
+  const hopBals = await Promise.all(hops.map((h) => settledBalance(h.address, ransomBal > 0n)));
+  for (const [i, h] of hops.entries()) if (hopBals[i] > 0n) await ensureGas(w, h);
+  const merges = await Promise.all(hops.map((h, i) => (hopBals[i] > 0n ? transferToken(h, w.merge.address, hopBals[i]) : null)));
+  for (const [i, h] of merges.entries()) if (h) await confirm(h, `hop${i + 1} -> merge ${formatEther(hopBals[i])} dUSD`);
 
   console.log("\n== Moves it to the cash-out wallet ==");
-  const last = await confirm(await transferToken(w.merge, w.cashout.address, RANSOM_AMOUNT), `merge -> cashout ${formatEther(RANSOM_AMOUNT)} dUSD`);
-
-  await Bun.write(STATE_FILE, JSON.stringify({ lastHopBlock: last.blockNumber.toString(), lastHopAt: Date.now() }, null, 2));
+  const mergeBal = await settledBalance(w.merge.address, merges.some(Boolean));
+  if (mergeBal > 0n) {
+    await ensureGas(w, w.merge);
+    const last = await confirm(await transferToken(w.merge, w.cashout.address, mergeBal), `merge -> cashout ${formatEther(mergeBal)} dUSD`);
+    await Bun.write(STATE_FILE, JSON.stringify({ lastHopBlock: last.blockNumber.toString(), lastHopAt: Date.now() }, null, 2));
+  } else log("merge wallet is empty: nothing to move");
   log("laundering staged. Watch the agent, then run: bun run cashout");
 }
 
@@ -222,16 +280,23 @@ const cmd = process.argv[2];
 const fresh = process.argv.includes("--fresh");
 const w = await loadWallets({ create: cmd === "setup", fresh });
 
+try {
 if (cmd === "setup") await setup(w);
-else if (cmd === "clean") await depositAtExchange(w.clean, D(100), "clean wallet");
+else if (cmd === "clean") await depositAtExchange(w, w.clean, D(100), "clean wallet");
 else if (cmd === "incident") await incident(w);
 else if (cmd === "pay") await pay(w);
 else if (cmd === "fund") await fund(w, process.argv[3]);
 else if (cmd === "launder") await launder(w);
-else if (cmd === "cashout") await depositAtExchange(w.cashout, RANSOM_AMOUNT, "cash-out wallet");
+else if (cmd === "cashout") await depositAtExchange(w, w.cashout, "all", "cash-out wallet");
 else if (cmd === "release") await release(w, process.argv[3]);
 else if (cmd === "rollback") await rollback(w, process.argv[3]);
 else {
   console.error("usage: bun run src/stage.ts setup [--fresh] | clean | pay | launder | incident | cashout | release <depositId> | rollback <depositId>");
+  process.exit(1);
+}
+} catch (e) {
+  // one readable line instead of a library stack trace in the activity log
+  const err = e as { shortMessage?: string; message?: string };
+  console.error(`error: ${err.shortMessage ?? String(err.message ?? e).split("\n")[0]}`);
   process.exit(1);
 }

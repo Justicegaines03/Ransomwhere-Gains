@@ -1,0 +1,70 @@
+{
+  "wallet": "0x35559c2df70eb9cc7cbb5035637b9cc9b9a24541",
+  "verdict": "MALICIOUS",
+  "behaviors": 36,
+  "matched": [
+    {
+      "behavior": "SPLIT_AND_MERGE",
+      "title": "Split and merge",
+      "source": "FATF 2023 Countering Ransomware Financing (layering via splitting and consolidation) — to confirm",
+      "detail": "0x3555…4541 split to 4 wallets; 2 recombined into 0x6436…8380",
+      "txs": [
+        "0xfc808bd87c1d5e59346b867c7d476939bbd30806ecd117fb08e8b2e64dc336a0",
+        "0xe006446e6765f44d4a9cc8420426ad67c5bc705b5f0fbfca507b89be363a56f7",
+        "0xffdf213ba161d7e11acac11c2246b3143a1a675e04a5e2f65d6145147991005f",
+        "0x9eb29d6147e8342676b4e9f22c134de18059f04b93427b31ac95d540b6b37355",
+        "0xe4487a71a74503577381fbf6cec5ffdf19c8a639ff38dbbe4e297437018db0e5",
+        "0xfd4c6e0544d9057ef5eb8614f089adf579d10fe4642b4e4ff1bc1ac9188e6930"
+      ]
+    },
+    {
+      "behavior": "RANSOM_NOTE_EVIDENCE",
+      "title": "Named in a ransom note",
+      "source": "Offchain evidence attached by the reporter",
+      "detail": "Evidence fingerprint 0x4e5e6507c940ff6b54af353643ddbf0f9cb34cc5b2ae5771637c14930524bb67",
+      "txs": []
+    }
+  ],
+  "timeline": [
+    {
+      "time": "2026-11-15T23:14:47.000Z",
+      "direction": "in",
+      "counterparty": "0x489D04aE2c40755c3328EeC03f1407B251220632",
+      "amount": "1,000 dUSD",
+      "tx": "0x2e9c177fe9ce534c4103c61c0fc8d692376c3701f3885fa043d0e3c6356b3da1"
+    },
+    {
+      "time": "2026-11-15T23:15:02.000Z",
+      "direction": "out",
+      "counterparty": "0xda6bD7535aBcc86cEEbFef89E9d3FB3262b18ec8",
+      "amount": "250 dUSD",
+      "tx": "0xfc808bd87c1d5e59346b867c7d476939bbd30806ecd117fb08e8b2e64dc336a0"
+    },
+    {
+      "time": "2026-11-15T23:15:02.000Z",
+      "direction": "out",
+      "counterparty": "0x138a276e53424Fdc05053DC6253d4e04b45Ee86b",
+      "amount": "250 dUSD",
+      "tx": "0xe006446e6765f44d4a9cc8420426ad67c5bc705b5f0fbfca507b89be363a56f7"
+    },
+    {
+      "time": "2026-11-15T23:15:02.000Z",
+      "direction": "out",
+      "counterparty": "0x8821b36554c6AeBd94ad739Fd65999A794B2Be33",
+      "amount": "250 dUSD",
+      "tx": "0xffdf213ba161d7e11acac11c2246b3143a1a675e04a5e2f65d6145147991005f"
+    },
+    {
+      "time": "2026-11-15T23:15:02.000Z",
+      "direction": "out",
+      "counterparty": "0x252b75f9b443F258AF9e7607a8c0A45624d363b3",
+      "amount": "250 dUSD",
+      "tx": "0x9eb29d6147e8342676b4e9f22c134de18059f04b93427b31ac95d540b6b37355"
+    }
+  ],
+  "evidenceHash": "0x4e5e6507c940ff6b54af353643ddbf0f9cb34cc5b2ae5771637c14930524bb67",
+  "chainId": 10143,
+  "generatedAt": "2026-11-15T23:15:07.121Z",
+  "reportHash": "0x9c1cd11e54ee32ba0c34dc43fbe64317f91926b80ecdec11cae2a1b3bcd7d710",
+  "verdictTx": "0xb6b50b6a8cb1e2a6026d2351860d03973d1f2f1e6e2fdcf31a5abfaaf7362c46"
+}

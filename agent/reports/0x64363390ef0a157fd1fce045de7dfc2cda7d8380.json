@@ -1,0 +1,60 @@
+{
+  "wallet": "0x64363390ef0a157fd1fce045de7dfc2cda7d8380",
+  "verdict": "MALICIOUS",
+  "behaviors": 22,
+  "matched": [
+    {
+      "behavior": "NEW_WALLET_CHAIN",
+      "title": "New-wallet chain",
+      "source": "FATF 2020 VA Red Flags (funds moved through newly created wallets) — to confirm",
+      "detail": "No history before receiving from 0x8821…Be33, which also had no history",
+      "txs": [
+        "0xfd4c6e0544d9057ef5eb8614f089adf579d10fe4642b4e4ff1bc1ac9188e6930"
+      ]
+    },
+    {
+      "behavior": "SPLIT_AND_MERGE",
+      "title": "Split and merge",
+      "source": "FATF 2023 Countering Ransomware Financing (layering via splitting and consolidation) — to confirm",
+      "detail": "0x3555…4541 split to 4 wallets; 2 recombined into 0x6436…8380",
+      "txs": [
+        "0xfc808bd87c1d5e59346b867c7d476939bbd30806ecd117fb08e8b2e64dc336a0",
+        "0xe006446e6765f44d4a9cc8420426ad67c5bc705b5f0fbfca507b89be363a56f7",
+        "0xffdf213ba161d7e11acac11c2246b3143a1a675e04a5e2f65d6145147991005f",
+        "0x9eb29d6147e8342676b4e9f22c134de18059f04b93427b31ac95d540b6b37355",
+        "0xe4487a71a74503577381fbf6cec5ffdf19c8a639ff38dbbe4e297437018db0e5",
+        "0xfd4c6e0544d9057ef5eb8614f089adf579d10fe4642b4e4ff1bc1ac9188e6930"
+      ]
+    },
+    {
+      "behavior": "TAINTED_BY_FLAGGED",
+      "title": "Received funds from a malicious wallet",
+      "source": "Downstream propagation (pilot rule)",
+      "detail": "Received 250 dUSD from malicious wallet 0xda6b…8ec8",
+      "txs": [
+        "0xe4487a71a74503577381fbf6cec5ffdf19c8a639ff38dbbe4e297437018db0e5"
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "time": "2026-11-15T23:15:03.000Z",
+      "direction": "in",
+      "counterparty": "0x8821b36554c6AeBd94ad739Fd65999A794B2Be33",
+      "amount": "250 dUSD",
+      "tx": "0xfd4c6e0544d9057ef5eb8614f089adf579d10fe4642b4e4ff1bc1ac9188e6930"
+    },
+    {
+      "time": "2026-11-15T23:15:03.000Z",
+      "direction": "in",
+      "counterparty": "0xda6bD7535aBcc86cEEbFef89E9d3FB3262b18ec8",
+      "amount": "250 dUSD",
+      "tx": "0xe4487a71a74503577381fbf6cec5ffdf19c8a639ff38dbbe4e297437018db0e5"
+    }
+  ],
+  "evidenceHash": null,
+  "chainId": 10143,
+  "generatedAt": "2026-11-15T23:15:07.122Z",
+  "reportHash": "0xd7b64f02e739b33e3c44eb75e5fe3d3fd6178986968fbd9cb5bf38c58cce5c9a",
+  "verdictTx": "0xb6b50b6a8cb1e2a6026d2351860d03973d1f2f1e6e2fdcf31a5abfaaf7362c46"
+}
