@@ -85,7 +85,7 @@ const AMOUNT = 1000n * 10n ** 18n;
 const num = (v) => (Number(BigInt(v) / 10n ** 14n) / 10000).toLocaleString("en-US");
 const pad = (hex) => hex.replace(/^0x/, "").padStart(64, "0");
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-let ransom = null, token = null, explorer = CHAIN.blockExplorerUrls[0], account = null, busy = false;
+let ransom = null, token = null, explorer = CHAIN.blockExplorerUrls[0], account = null, busy = false, paidOnce = false;
 
 // countdowns (cosmetic)
 const start = Date.now(), ends = [3 * 864e5 - 1000, 7 * 864e5 - 1000];
@@ -118,6 +118,7 @@ async function refreshWallet() {
   const bal = await tokenBalance(account);
   $("#who").textContent = `MetaMask ${account.slice(0, 6)}…${account.slice(-4)} · balance ${num(bal)} dUSD`;
   $("#payBtn").disabled = busy || bal < AMOUNT;
+  if (paidOnce && !busy && bal >= AMOUNT) { paidOnce = false; $("#payBtn").textContent = "Send payment"; note("Funds recovered.", "Ransomwhere-Gains rolled the payment back: 1,000 dUSD was returned to this wallet."); }
   return bal;
 }
 
@@ -156,6 +157,7 @@ $("#payBtn").addEventListener("click", async () => {
     let rc = null;
     for (let i = 0; i < 60 && !rc; i++) { await sleep(500); rc = await eth().request({ method:"eth_getTransactionReceipt", params:[hash] }); }
     busy = false; $("#payBtn").textContent = "Paid";
+    if (rc && rc.status === "0x1") paidOnce = true;
     if (rc && rc.status === "0x1") note("Payment sent.", "The money has left the victim’s wallet. It is now the attacker’s to launder.", hash);
     else note("Payment did not confirm.", "Check the transaction in MetaMask.", hash);
     refreshWallet();
@@ -173,7 +175,7 @@ $("#demoPay").addEventListener("click", async (ev) => {
 
 if (eth()) eth().on?.("accountsChanged", (a) => { account = a[0] || null; if (account) refreshWallet(); else { $("#who").textContent = "Wallet not connected"; $("#payBtn").disabled = true; } });
 loadTargets().catch(() => {});
-setInterval(() => loadTargets().catch(() => {}), 4000);
+setInterval(() => { loadTargets().catch(() => {}); if (account && !busy) refreshWallet().catch(() => {}); }, 3000);
 </script>
 </body>
 </html>

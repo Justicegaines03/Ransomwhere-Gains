@@ -109,7 +109,7 @@ let victimOverride: string | null = null;
 
 async function runStage(name: string, arg?: string) {
   let cmd =
-    name === "release" && arg && /^\d+$/.test(arg) ? ["bun", "run", "src/stage.ts", "release", arg]
+    (name === "release" || name === "rollback") && arg && /^\d+$/.test(arg) ? ["bun", "run", "src/stage.ts", name, arg]
     : name === "fund" && arg && /^0x[0-9a-fA-F]{40}$/.test(arg) ? ["bun", "run", "src/stage.ts", "fund", arg]
     : STAGES[name];
   if (name === "setup") victimOverride = null;
@@ -275,6 +275,7 @@ Bun.serve({
       if (res.ok) victimOverride = addr;
       return Response.json(res);
     }
+    if (req.method === "POST" && /^\/api\/rollback\/\d+$/.test(path)) return Response.json(await runStage("rollback", path.split("/").pop()));
     if (req.method === "POST" && /^\/api\/release\/\d+$/.test(path)) return Response.json(await runStage("release", path.split("/").pop()));
 
     // all threat reports on disk (current + earlier runs), summarized for the Threats list

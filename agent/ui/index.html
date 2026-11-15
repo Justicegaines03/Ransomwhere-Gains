@@ -73,6 +73,7 @@ main{padding:14px 16px;display:grid;grid-template-columns:minmax(440px,38%) 1fr;
 .kpi .v{font-size:22px;font-weight:600;margin-top:2px;letter-spacing:-.2px}
 .kpi .v small{font-size:12px;color:var(--muted);font-weight:400;margin-left:4px}
 .kpi.alert .v{color:var(--bad)}
+.kpi.good .v{color:var(--ok)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
 .card>h2{margin:0;padding:10px 14px;font-size:12.5px;font-weight:600;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
 .card>h2 .count{color:var(--muted);font-weight:400}
@@ -96,7 +97,7 @@ tr.old td{color:var(--dim)}
 .tag:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .tag.m{background:var(--bad-soft);color:var(--bad)}.tag.s{background:var(--warn-soft);color:var(--warn)}.tag.c{background:var(--ok-soft);color:var(--ok)}
 .st{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:5px}
-.st.held{color:var(--warn)}.st.rel{color:var(--info)}
+.st.held{color:var(--warn)}.st.rel{color:var(--info)}.st.rb{color:var(--ok)}
 .st svg.i{width:13px;height:13px}
 .addr{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
 .empty{color:var(--dim);padding:28px 20px;text-align:center}
@@ -232,7 +233,7 @@ tr.old td{color:var(--dim)}
     <div class="kpi" id="kThreatsBox"><div class="t">Active threats</div><div class="v" id="kThreats">0</div></div>
     <div class="kpi"><div class="t">Funds held at exchange</div><div class="v" id="kHeld">0<small>dUSD</small></div></div>
     <div class="kpi"><div class="t">Time to verdict</div><div class="v" id="kTtv">–</div></div>
-    <div class="kpi"><div class="t">Clean deposits credited</div><div class="v" id="kClean">0</div></div>
+    <div class="kpi" id="kBackBox"><div class="t">Returned to victims</div><div class="v" id="kBack">0<small>dUSD</small></div></div>
   </section>
 
   <div class="leftcol">
@@ -305,7 +306,7 @@ const MATRIX = [
   { stage:"Propagation", sub:"Risk follows the money", techs:[{k:"TAINTED_BY_FLAGGED",t:"Funds from a malicious wallet",s:"Downstream taint (pilot rule)"}] },
   { stage:"Integration", sub:"Cashing out", techs:[{k:"CASHOUT",t:"Deposit at an exchange",s:"Where the hold happens"}] },
 ];
-const STAGE_TEXT = { setup:"Preparing wallets", clean:"Depositing", incident:"Incident running", pay:"Victim paying", launder:"Laundering", fund:"Funding victim wallet", cashout:"Cash-out running", release:"Releasing deposit" };
+const STAGE_TEXT = { setup:"Preparing wallets", clean:"Depositing", incident:"Incident running", pay:"Victim paying", launder:"Laundering", fund:"Funding victim wallet", cashout:"Cash-out running", release:"Releasing deposit", rollback:"Rolling back" };
 
 let state = null, addrToRole = {}, prevVerdict = {}, seenDeposits = null, explorer = "https://testnet.monadexplorer.com";
 let selected = null, selectedAddr = null, manual = false, oldReports = [], showOld = false, armedRelease = null, detailToken = 0, detailKey = "";
@@ -398,6 +399,7 @@ function classification(role, n) {
 function status(role) {
   const ds = depositsOf(role);
   if (ds.some(d => d.status === 1)) return `<span class="st held">${icon("lock")}Funds held</span>`;
+  if (ds.some(d => d.status === 3)) return `<span class="st rb">${icon("check")}Rolled back</span>`;
   if (ds.some(d => d.status === 2)) return `<span class="st rel">Released</span>`;
   return `<span class="st">Monitoring</span>`;
 }
@@ -426,7 +428,9 @@ function renderKpis() {
   const mine = deposits().filter(d => addrToRole[d.depositor.toLowerCase()]);
   const held = mine.filter(d => d.status === 1).reduce((s, d) => s + BigInt(d.amount), 0n);
   $("#kHeld").innerHTML = `${num(held.toString())}<small>dUSD</small>`;
-  $("#kClean").textContent = mine.filter(d => d.status === 0).length;
+  const back = mine.filter(d => d.status === 3).reduce((s, d) => s + BigInt(d.amount), 0n);
+  $("#kBack").innerHTML = `${num(back.toString())}<small>dUSD</small>`;
+  $("#kBackBox").classList.toggle("good", back > 0n);
 }
 function renderMatrix() {
   const roles = TRAIL.filter(r => nodesOf()[r]);
@@ -460,7 +464,7 @@ async function renderDetail() {
     $("#timeline").innerHTML = $("#response").innerHTML = `<div class="empty">Select a wallet to see its details.</div>`;
     return;
   }
-  const v = n.verdict ?? 0, key = [selected, n.address, v, n.behaviors, JSON.stringify(depositsOf(selected)), armedRelease, t.flagged].join("|");
+  const v = n.verdict ?? 0, key = [selected, n.address, v, n.behaviors, JSON.stringify(depositsOf(selected)), armedRelease, armedAction, t.flagged].join("|");
   $("#dTitle").innerHTML = `${label(selected)}<span class="addr">${n.address}</span>`;
   $("#dTag").innerHTML = tag(v);
   if (key === detailKey) return;
@@ -483,14 +487,14 @@ async function renderDetail() {
 }
 function renderResponse(rep, n) {
   const ds = depositsOf(selected);
-  const depRows = ds.length ? `<table><thead><tr><th>Deposit</th><th>Amount</th><th>Verdict at deposit</th><th>Status</th><th></th></tr></thead><tbody>${ds.map(d => `<tr><td>#${d.id}</td><td>${dusd(d.amount)}</td><td>${VNAME[d.verdict]}</td><td>${["Credited","Held","Released"][d.status]}</td><td>${d.status === 1 ? (armedRelease === d.id ? `<button class="danger" data-release="${d.id}">Confirm release</button> <button data-cancel>Cancel</button>` : `<button data-arm="${d.id}">Release funds</button>`) : ""}</td></tr>`).join("")}</tbody></table>` : `<p style="margin:0">No deposits from this wallet.</p>`;
+  const depRows = ds.length ? `<table><thead><tr><th>Deposit</th><th>Amount</th><th>Verdict at deposit</th><th>Status</th><th></th></tr></thead><tbody>${ds.map(d => `<tr><td>#${d.id}</td><td>${dusd(d.amount)}</td><td>${VNAME[d.verdict]}</td><td>${["Credited","Held","Released","Rolled back"][d.status]}</td><td>${d.status === 1 ? (armedRelease === d.id ? `<button class="${armedAction === "rollback" ? "primary" : "danger"}" data-do="${d.id}">Confirm ${armedAction === "rollback" ? "rollback" : "release"}</button> <button data-cancel>Cancel</button>` : `<button class="primary" data-arm="${d.id}" data-action="rollback">Roll back to victim</button> <button data-arm="${d.id}" data-action="release">Release to depositor</button>`) : ""}</td></tr>`).join("")}</tbody></table>` : `<p style="margin:0">No deposits from this wallet.</p>`;
   $("#response").innerHTML = `<div class="resp">
-    <div class="box"><h4>Containment</h4><p>The exchange reads the registry on every deposit and holds funds from wallets that are not clean. Held funds are not lost: a reviewer can release them.</p>${depRows}</div>
+    <div class="box"><h4>Containment</h4><p>The exchange reads the registry on every deposit and holds funds from wallets that are not clean. While the funds are held, they can be rolled back to the wallet that paid the ransom, or released to the depositor if the verdict was wrong.</p>${depRows}</div>
     <div class="box"><h4>Evidence</h4>${rep ? `<div class="kv"><span>Report hash (on-chain)</span><div class="addr">${rep.reportHash}</div></div><div class="kv"><span>Ransom-note fingerprint</span><div class="addr">${rep.evidenceHash || "None"}</div></div>${rep.verdictTx ? `<div class="kv"><a target="_blank" rel="noopener" href="${explorer}/tx/${rep.verdictTx}">Verdict transaction</a></div>` : ""}` : `<p>No report for this wallet.</p>`}<div class="kv"><a target="_blank" rel="noopener" href="${explorer}/address/${n.address}">Wallet on explorer</a></div></div>
   </div>`;
-  document.querySelectorAll("[data-arm]").forEach(b => b.addEventListener("click", () => { armedRelease = Number(b.dataset.arm); renderDetail(); }));
+  document.querySelectorAll("[data-arm]").forEach(b => b.addEventListener("click", () => { armedRelease = Number(b.dataset.arm); armedAction = b.dataset.action; renderDetail(); }));
   document.querySelectorAll("[data-cancel]").forEach(b => b.addEventListener("click", () => { armedRelease = null; renderDetail(); }));
-  document.querySelectorAll("[data-release]").forEach(b => b.addEventListener("click", () => { armedRelease = null; post("/api/release/" + b.dataset.release); }));
+  document.querySelectorAll("[data-do]").forEach(b => b.addEventListener("click", () => { armedRelease = null; post("/api/" + armedAction + "/" + b.dataset.do); }));
 }
 function renderAll() {
   // selection follows the wallet, not the role: a reset replaces every wallet
@@ -556,12 +560,13 @@ function showBanner(ok, k, big, sub) {
 function toast(t) { const x = $("#toast"); x.textContent = t; x.style.display = "block"; clearTimeout(toast.t); toast.t = setTimeout(() => x.style.display = "none", 3500); }
 
 // ---------- activity ----------
-let incidentUntil = 0;
+let incidentUntil = 0, armedAction = "rollback";
 function feedLine(ev) {
   const fresh = Date.now() - ev.at < 10000;
   if (ev.source === "agent" && fresh) verdictFromAgentLine(ev.line);
   const f = $("#feed"), d = document.createElement("div");
-  if (/DEPOSIT HELD|RELEASED/.test(ev.line)) d.className = "held";
+  if (/ROLLED BACK|rolled back/.test(ev.line)) d.className = "ok";
+  else if (/DEPOSIT HELD|RELEASED/.test(ev.line)) d.className = "held";
   else if (/MALICIOUS|failed|error/i.test(ev.line)) d.className = "mal";
   else if (/CREDITED|finished|posted \d/.test(ev.line)) d.className = "ok";
   const text = esc(ev.line.replace(/^[▶✔✖]\s*/, "").replace(/^\s*>>>\s*/, "")).replace(/https:\/\/testnet\.monadexplorer\.com\/tx\/(0x[0-9a-f]{8})[0-9a-f]+/g, (m, h) => `<a href="${m}" target="_blank" rel="noopener">${h}…</a>`);
@@ -570,10 +575,12 @@ function feedLine(ev) {
   f.appendChild(d); if (stick) f.scrollTop = f.scrollHeight;
   // Time to verdict measures detection of the incident, not later re-scores (e.g. after the cash-out deposit)
   if (ev.source === "ui" && /stage\.ts (incident|launder)/.test(ev.line)) incidentUntil = ev.at + 60000;
-  else if (ev.source === "ui" && /stage\.ts (cashout|setup|clean|release|pay|fund)/.test(ev.line)) { incidentUntil = 0; if (/setup/.test(ev.line)) $("#kTtv").textContent = "–"; }
+  else if (ev.source === "ui" && /stage\.ts (cashout|setup|clean|release|rollback|pay|fund)/.test(ev.line)) { incidentUntil = 0; if (/setup/.test(ev.line)) $("#kTtv").textContent = "–"; }
   const m = ev.line.match(/verdict landed (\d+)s/);
   if (m && ev.at < incidentUntil) $("#kTtv").innerHTML = `${m[1]}<small>s after last hop</small>`;
-  if (fresh && /released/.test(ev.line)) detailKey = "";
+  if (fresh && /released|rolled back/.test(ev.line)) detailKey = "";
+  const rb = fresh && ev.line.match(/rolled back: ([\d.,]+) dUSD returned to victim (0x[0-9a-fA-F]{40})/);
+  if (rb) showBanner(true, "Rollback complete", "Funds returned", `<b>${Number(rb[1]).toLocaleString("en-US")} dUSD</b> sent back to ${who(rb[2])} · the attacker receives nothing`);
 }
 
 // ---------- navigation ----------

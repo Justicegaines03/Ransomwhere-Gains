@@ -34,7 +34,8 @@ button[disabled]{background:#c9ced6;cursor:not-allowed}
 .hist th{color:#5c6270;font-weight:500}
 .hist{width:100%;border-collapse:collapse}
 .pill{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px}
-.pill.c{background:#eaf7f1;color:#0c5c46}.pill.h{background:#fff6e5;color:#7a5200}.pill.r{background:#e8f0ff;color:#1f4fa8}
+.pill.c{background:#eaf7f1;color:#0c5c46}.pill.h{background:#fff6e5;color:#7a5200}.pill.r{background:#e8f0ff;color:#1f4fa8}.pill.x{background:#fdecec;color:#9b1c1c}
+.result.rev{display:block;background:#fdecec;border-color:#f3b9b9;color:#7f1d1d}
 .muted{color:#5c6270;font-size:13px}
 </style>
 </head>
@@ -86,12 +87,13 @@ function render() {
   $("#dep").textContent = busy ? "Depositing…" : can ? `Deposit ${num(AMT[role])} dUSD` : mine.length ? "Deposited" : "Nothing to deposit yet";
   const sum = (st) => mine.filter(d => st.includes(d.status)).reduce((s, d) => s + BigInt(d.amount), 0n);
   $("#avail").textContent = num(sum([0, 2])); $("#hold").textContent = num(sum([1]));
-  $("#hist").innerHTML = mine.slice().reverse().map(d => `<tr><td>#${d.id}</td><td>${num(d.amount)} dUSD</td><td><span class="pill ${"chr"[d.status]}">${["Credited","On hold","Released"][d.status]}</span></td></tr>`).join("");
+  $("#hist").innerHTML = mine.slice().reverse().map(d => `<tr><td>#${d.id}</td><td>${num(d.amount)} dUSD</td><td><span class="pill ${"chrx"[d.status]}">${["Credited","On hold","Released","Reversed"][d.status]}</span></td></tr>`).join("");
   $("#noHist").style.display = mine.length ? "none" : "block";
   const last = mine[mine.length - 1], r = $("#result");
   r.className = "result";
   if (last) {
-    if (last.status === 1) { r.classList.add("hold"); $("#rT").textContent = "Deposit on hold"; $("#rS").textContent = `Your deposit of ${num(last.amount)} dUSD (ref #${last.id}) is under compliance review. The funds are not available to trade or withdraw.`; }
+    if (last.status === 3) { r.classList.add("rev"); $("#rT").textContent = "Deposit reversed"; $("#rS").textContent = `Your deposit of ${num(last.amount)} dUSD (ref #${last.id}) was returned to its original owner after a ransomware investigation.`; }
+    else if (last.status === 1) { r.classList.add("hold"); $("#rT").textContent = "Deposit on hold"; $("#rS").textContent = `Your deposit of ${num(last.amount)} dUSD (ref #${last.id}) is under compliance review. The funds are not available to trade or withdraw.`; }
     else { r.classList.add("ok"); $("#rT").textContent = last.status === 2 ? "Deposit released" : "Deposit credited"; $("#rS").textContent = `${num(last.amount)} dUSD is available in your account (ref #${last.id}).`; }
     if (busy && last.id !== lastSeen) busy = false;
   }

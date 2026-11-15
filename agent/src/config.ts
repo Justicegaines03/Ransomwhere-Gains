@@ -28,7 +28,7 @@ export const monadTestnet = defineChain({
 export const ADDRESSES = {
   token: "0x4c5a52AB5bb8589fE576c940fD23F07Bb1D97B5D",
   registry: "0x3525Bd36afB988f8cFeBB95e2C15Af1ee202F8c9",
-  exchange: "0xD307DE57992B1b01cd95Ce7E38b15251D881950A",
+  exchange: "0xbd1e7D8Cd4b8D70D9B1A545a44cf5bE26958BfE1", // redeployed with rollback(); first version: 0xD307DE57992B1b01cd95Ce7E38b15251D881950A
 } as const satisfies Record<string, Address>;
 
 export const DEPLOY_BLOCK = 80026796n;

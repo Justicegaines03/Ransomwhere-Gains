@@ -188,6 +188,27 @@ async function release(w: Wallets, idArg: string | undefined) {
   console.log(`\n  >>> DEPOSIT RELEASED — reviewed as false positive\n`);
 }
 
+/**
+ * Rollback: return a held deposit to the victim. The victim is whoever paid the ransom wallet,
+ * read from the agent’s own threat report for that wallet (the evidence trail), not typed in by hand.
+ */
+async function rollback(w: Wallets, idArg: string | undefined) {
+  if (!idArg || !/^\d+$/.test(idArg)) throw new Error("usage: bun run src/stage.ts rollback <depositId>");
+  const id = BigInt(idArg);
+  const [, amount, , status] = (await pub.readContract({ address: ADDRESSES.exchange, abi: ABI.exchange, functionName: "deposits", args: [id] })) as [string, bigint, number, number];
+  if (Number(status) !== 1) throw new Error(`deposit ${id} is not held (status ${status})`);
+  const report = Bun.file(new URL(`../reports/${w.ransom.address.toLowerCase()}.json`, import.meta.url));
+  if (!(await report.exists())) throw new Error("no threat report for the ransom wallet yet: cannot identify the victim");
+  const paid = ((await report.json()).timeline as { direction: string; counterparty: string }[]).find((t) => t.direction === "in");
+  if (!paid || !/^0x[0-9a-fA-F]{40}$/.test(paid.counterparty)) throw new Error("the ransom wallet’s report has no incoming payment");
+  const victim = paid.counterparty as `0x${string}`;
+  await confirm(
+    await wallet(w.funder).writeContract({ address: ADDRESSES.exchange, abi: ABI.exchange, functionName: "rollback", args: [id, victim] }),
+    `deposit ${id} rolled back: ${formatEther(amount)} dUSD returned to victim ${victim}`,
+  );
+  console.log(`\n  >>> DEPOSIT ROLLED BACK — ${formatEther(amount)} dUSD returned to the victim\n`);
+}
+
 const cmd = process.argv[2];
 const fresh = process.argv.includes("--fresh");
 const w = await loadWallets({ create: cmd === "setup", fresh });
@@ -200,7 +221,8 @@ else if (cmd === "fund") await fund(w, process.argv[3]);
 else if (cmd === "launder") await launder(w);
 else if (cmd === "cashout") await depositAtExchange(w.cashout, RANSOM_AMOUNT, "cash-out wallet");
 else if (cmd === "release") await release(w, process.argv[3]);
+else if (cmd === "rollback") await rollback(w, process.argv[3]);
 else {
-  console.error("usage: bun run src/stage.ts setup [--fresh] | clean | pay | launder | incident | cashout | release <depositId>");
+  console.error("usage: bun run src/stage.ts setup [--fresh] | clean | pay | launder | incident | cashout | release <depositId> | rollback <depositId>");
   process.exit(1);
 }
