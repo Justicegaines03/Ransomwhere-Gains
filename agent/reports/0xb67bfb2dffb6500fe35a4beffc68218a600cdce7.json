@@ -1,0 +1,105 @@
+{
+  "wallet": "0xb67bfb2dffb6500fe35a4beffc68218a600cdce7",
+  "verdict": "MALICIOUS",
+  "behaviors": 31,
+  "matched": [
+    {
+      "behavior": "RAPID_PASS_THROUGH",
+      "title": "Rapid pass-through",
+      "source": "FATF 2023 Countering Ransomware Financing; FATF 2020 VA Red Flags (rapid movement of funds) — to confirm",
+      "detail": "Forwarded 400.0% of a 250 dUSD receipt within 1s",
+      "txs": [
+        "0xd7e5d1a407f7ca5e6b2195e5651f59e46bf8150f6ff2c3d59d1b17d4f68c05e4",
+        "0x345d7e961a048cd3be489fe3967a140c140e7341f773530554c5aaa266a91f57"
+      ]
+    },
+    {
+      "behavior": "NEW_WALLET_CHAIN",
+      "title": "New-wallet chain",
+      "source": "FATF 2020 VA Red Flags (funds moved through newly created wallets) — to confirm",
+      "detail": "No history before receiving from 0x954a…3BD7, which also had no history",
+      "txs": [
+        "0xd7e5d1a407f7ca5e6b2195e5651f59e46bf8150f6ff2c3d59d1b17d4f68c05e4"
+      ]
+    },
+    {
+      "behavior": "MANY_TO_ONE",
+      "title": "Many-to-one collection",
+      "source": "FinCEN 2021 Ransomware Advisory (structuring / aggregation patterns) — to confirm",
+      "detail": "4 senders paid ~250 dUSD each into this new wallet within 0s",
+      "txs": [
+        "0xd7e5d1a407f7ca5e6b2195e5651f59e46bf8150f6ff2c3d59d1b17d4f68c05e4",
+        "0xa5a518962229e30b52cea2983040fcf0dc0f684af0f42a2b462446b64432371d",
+        "0x15036eada064355b61f945087060500c8504d39aafac66b5e9b77704d0dbaaa1",
+        "0x8f05bf9a8a05acb6654c95c3e68153df4f46ae8dbba241f7deac11e4cc2da5fe"
+      ]
+    },
+    {
+      "behavior": "SPLIT_AND_MERGE",
+      "title": "Split and merge",
+      "source": "FATF 2023 Countering Ransomware Financing (layering via splitting and consolidation) — to confirm",
+      "detail": "0x4eee…9b92 split to 4 wallets; 4 recombined into 0xb67b…dce7",
+      "txs": [
+        "0x65592578495b36392733e027ab554053b5f8615358101b9f5337460a0bae839c",
+        "0x792e1a6f9841b5d41c4c7c92995c4ca47f3fee42f6eb0297b06f7b485cefe5f1",
+        "0x8c05c9cf1d0e0c1b2af291ba6e6bfe75aaed0afb3dade1f271310cf62183ac18",
+        "0xca5cca69e336efae98a936559cbc32b477f9b778f8beae132ed7e7dbd8c3ce8d",
+        "0xd7e5d1a407f7ca5e6b2195e5651f59e46bf8150f6ff2c3d59d1b17d4f68c05e4",
+        "0x8f05bf9a8a05acb6654c95c3e68153df4f46ae8dbba241f7deac11e4cc2da5fe",
+        "0xa5a518962229e30b52cea2983040fcf0dc0f684af0f42a2b462446b64432371d",
+        "0x15036eada064355b61f945087060500c8504d39aafac66b5e9b77704d0dbaaa1"
+      ]
+    },
+    {
+      "behavior": "TAINTED_BY_FLAGGED",
+      "title": "Received funds from a malicious wallet",
+      "source": "Downstream propagation (pilot rule)",
+      "detail": "Received 250 dUSD from malicious wallet 0x954a…3BD7",
+      "txs": [
+        "0xd7e5d1a407f7ca5e6b2195e5651f59e46bf8150f6ff2c3d59d1b17d4f68c05e4"
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "time": "2026-11-15T21:47:06.000Z",
+      "direction": "in",
+      "counterparty": "0x954abAD4e9632EfFf6cdc2E67449C39e16E53BD7",
+      "amount": "250 dUSD",
+      "tx": "0xd7e5d1a407f7ca5e6b2195e5651f59e46bf8150f6ff2c3d59d1b17d4f68c05e4"
+    },
+    {
+      "time": "2026-11-15T21:47:06.000Z",
+      "direction": "in",
+      "counterparty": "0x45bA2e8F2C3E7B4848d6bE1105D886AD8D11deBa",
+      "amount": "250 dUSD",
+      "tx": "0xa5a518962229e30b52cea2983040fcf0dc0f684af0f42a2b462446b64432371d"
+    },
+    {
+      "time": "2026-11-15T21:47:06.000Z",
+      "direction": "in",
+      "counterparty": "0x193676FA577845b40E907FaF3710D12138Fc2904",
+      "amount": "250 dUSD",
+      "tx": "0x15036eada064355b61f945087060500c8504d39aafac66b5e9b77704d0dbaaa1"
+    },
+    {
+      "time": "2026-11-15T21:47:06.000Z",
+      "direction": "in",
+      "counterparty": "0x6f7C2B215E7efFcA135CAE7FE95D58eF1b80D36f",
+      "amount": "250 dUSD",
+      "tx": "0x8f05bf9a8a05acb6654c95c3e68153df4f46ae8dbba241f7deac11e4cc2da5fe"
+    },
+    {
+      "time": "2026-11-15T21:47:07.000Z",
+      "direction": "out",
+      "counterparty": "0x99c341C00D936F11B29793a53a86d089c0D98071",
+      "amount": "1,000 dUSD",
+      "tx": "0x345d7e961a048cd3be489fe3967a140c140e7341f773530554c5aaa266a91f57"
+    }
+  ],
+  "evidenceHash": null,
+  "chainId": 10143,
+  "generatedAt": "2026-11-15T21:47:10.248Z",
+  "reportHash": "0x9dcf518b4271d6f45965b0860089bfd8147bf84d863fe4ababd1ffaace3ae130",
+  "verdictTx": "0xa6435c9828418a9930241047e21345fcc334987fef38023fd428552e6f238096"
+}
