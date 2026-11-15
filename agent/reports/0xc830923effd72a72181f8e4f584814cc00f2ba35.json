@@ -1,0 +1,56 @@
+{
+  "wallet": "0xc830923effd72a72181f8e4f584814cc00f2ba35",
+  "verdict": "MALICIOUS",
+  "behaviors": 19,
+  "matched": [
+    {
+      "behavior": "RAPID_PASS_THROUGH",
+      "title": "Rapid pass-through",
+      "source": "FATF 2023 Countering Ransomware Financing; FATF 2020 VA Red Flags (rapid movement of funds) — to confirm",
+      "detail": "Forwarded 100.0% of a 1,000 dUSD receipt within 17s",
+      "txs": [
+        "0xaf5405eed8dbc006fef04bc455031d4c0916f14fcc1cefa2996e40e6a0b40ca8",
+        "0xbe62519a110dd037c699d829d7a6a4b36eaedbccc03a4e1306cb13e53c7b37d3"
+      ]
+    },
+    {
+      "behavior": "NEW_WALLET_CHAIN",
+      "title": "New-wallet chain",
+      "source": "FATF 2020 VA Red Flags (funds moved through newly created wallets) — to confirm",
+      "detail": "No history before receiving from 0xB596…817D, which also had no history",
+      "txs": [
+        "0xaf5405eed8dbc006fef04bc455031d4c0916f14fcc1cefa2996e40e6a0b40ca8"
+      ]
+    },
+    {
+      "behavior": "TAINTED_BY_FLAGGED",
+      "title": "Received funds from a malicious wallet",
+      "source": "Downstream propagation (pilot rule)",
+      "detail": "Received 1,000 dUSD from malicious wallet 0xB596…817D",
+      "txs": [
+        "0xaf5405eed8dbc006fef04bc455031d4c0916f14fcc1cefa2996e40e6a0b40ca8"
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "time": "2026-11-15T23:23:50.000Z",
+      "direction": "in",
+      "counterparty": "0xB596A780A7e0212725727Be7e6ff2D5bD213817D",
+      "amount": "1,000 dUSD",
+      "tx": "0xaf5405eed8dbc006fef04bc455031d4c0916f14fcc1cefa2996e40e6a0b40ca8"
+    },
+    {
+      "time": "2026-11-15T23:24:07.000Z",
+      "direction": "out",
+      "counterparty": "0xbd1e7D8Cd4b8D70D9B1A545a44cf5bE26958BfE1",
+      "amount": "1,000 dUSD",
+      "tx": "0xbe62519a110dd037c699d829d7a6a4b36eaedbccc03a4e1306cb13e53c7b37d3"
+    }
+  ],
+  "evidenceHash": null,
+  "chainId": 10143,
+  "generatedAt": "2026-11-15T23:24:11.260Z",
+  "reportHash": "0xd88867088e58c9094969a61964ee99f901ed0d3584afe4bbbfd1a9ae0b03a03d",
+  "verdictTx": "0x0b65c9809906669f4451e9140b812638ca3d8f9b361726fa5809bc2c5faac722"
+}

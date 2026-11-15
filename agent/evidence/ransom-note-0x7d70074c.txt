@@ -1,0 +1,8 @@
+YOUR FILES HAVE BEEN ENCRYPTED.
+
+To recover them, send 1000 dUSD on Monad to:
+  0x7D70074c176176B2d5Db30cfBDf30F1537Ef7b15
+
+You have 48 hours.
+
+(Staged for the Ransomwhere-Gains demo on Monad testnet. Not a real attack.)
