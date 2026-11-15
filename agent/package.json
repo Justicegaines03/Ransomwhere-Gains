@@ -9,7 +9,8 @@
     "incident": "bun run src/stage.ts incident",
     "cashout": "bun run src/stage.ts cashout",
     "agent": "bun run src/agent.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "ui": "bun run ui/server.ts"
   },
   "dependencies": {
     "viem": "2.57.20"
