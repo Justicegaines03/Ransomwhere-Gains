@@ -1,4 +1,4 @@
-import { defineChain, type Address } from "viem";
+import { defineChain, http, type Address } from "viem";
 import VerdictRegistryAbi from "./abi/VerdictRegistry.json";
 import DemoExchangeAbi from "./abi/DemoExchange.json";
 import DemoTokenAbi from "./abi/DemoToken.json";
@@ -32,6 +32,13 @@ export const ADDRESSES = {
 } as const satisfies Record<string, Address>;
 
 export const DEPLOY_BLOCK = 80026796n;
+
+/**
+ * The public Monad RPC rate-limits (HTTP 429) under load. Every client retries with backoff;
+ * `batch` packs concurrent reads into one HTTP request (used by the UI's state poller).
+ */
+export const rpc = (opts: { batch?: boolean } = {}) =>
+  http(RPC_URL, { retryCount: 8, retryDelay: 400, batch: opts.batch ? { batchSize: 50, wait: 20 } : false });
 
 /** Monad testnet rejects eth_getLogs ranges much over 100 blocks. */
 export const LOG_CHUNK = 100n;

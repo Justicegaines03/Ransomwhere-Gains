@@ -1,14 +1,14 @@
 // Demo UI backend: buttons in the browser run the SAME commands as the CLI (src/stage.ts, src/agent.ts).
 //   bun run ui   ->  http://127.0.0.1:4545
 // Localhost only. Fixed command list (no user input reaches a process). Private keys never leave this process.
-import { createPublicClient, http, parseEventLogs, type Log } from "viem";
+import { createPublicClient, parseEventLogs, type Log } from "viem";
 import type { Subprocess } from "bun";
-import { ABI, ADDRESSES, EXPLORER, monadTestnet } from "../src/config";
+import { ABI, ADDRESSES, EXPLORER, monadTestnet, rpc } from "../src/config";
 import { loadWallets, ROLES } from "../src/wallets";
 
 const PORT = 4545;
 const AGENT_DIR = new URL("../", import.meta.url).pathname;
-const pub = createPublicClient({ chain: monadTestnet, transport: http() });
+const pub = createPublicClient({ chain: monadTestnet, transport: rpc({ batch: true }) });
 
 // ---------- live event stream (Server-Sent Events) ----------
 const clients = new Set<ReadableStreamDefaultController<Uint8Array>>();
@@ -82,10 +82,28 @@ const STAGES: Record<string, string[]> = {
   cashout: ["bun", "run", "src/stage.ts", "cashout"],
 };
 
+/**
+ * Fresh wallets only when the current set was already used in an incident (the rules need brand-new wallets).
+ * Otherwise `setup` just tops up and finishes — so retrying a half-failed setup never throws away gas.
+ */
+async function needsFreshWallets(): Promise<boolean> {
+  try {
+    const w = await loadWallets();
+    const [ransomNonce, cashVerdict] = await Promise.all([
+      pub.getTransactionCount({ address: w.ransom.address }),
+      pub.readContract({ address: ADDRESSES.registry, abi: ABI.registry, functionName: "verdictOf", args: [w.cashout.address] }) as Promise<number>,
+    ]);
+    return ransomNonce > 0 || Number(cashVerdict) !== 0;
+  } catch {
+    return true; // no wallets yet
+  }
+}
+
 async function runStage(name: string) {
-  const cmd = STAGES[name];
+  let cmd = STAGES[name];
   if (!cmd) return { ok: false, error: "unknown step" };
   if (stageProc) return { ok: false, error: `"${stageName}" is still running` };
+  if (name === "setup" && !(await needsFreshWallets())) cmd = cmd.filter((a) => a !== "--fresh");
 
   // A fresh setup hands the registry to a NEW agent wallet: the running agent must restart with it.
   const restartAgent = name === "setup" && agentProc !== null;
@@ -173,7 +191,7 @@ async function statePoller() {
     } catch (e) {
       logLine("ui", `state read failed: ${(e as Error).message.split("\n")[0]}`);
     }
-    await Bun.sleep(1200);
+    await Bun.sleep(stageName ? 4000 : 2500);
   }
 }
 
@@ -181,7 +199,7 @@ async function statePoller() {
 async function transferWatcher() {
   let next = (await pub.getBlockNumber()) + 1n;
   for (;;) {
-    await Bun.sleep(400);
+    await Bun.sleep(700);
     try {
       const head = await pub.getBlockNumber();
       if (head < next) continue;

@@ -1,9 +1,9 @@
 // Detection agent: watch dUSD transfers on Monad, match behaviors, post verdicts onchain, write reports.
 //   bun run agent            follow the chain (Ctrl-C to stop)
 //   bun run agent --once     one pass, then exit
-import { createPublicClient, createWalletClient, http, keccak256, parseEventLogs, toBytes, type Hash, type Log } from "viem";
+import { createPublicClient, createWalletClient, keccak256, parseEventLogs, toBytes, type Hash, type Log } from "viem";
 import { readdir } from "node:fs/promises";
-import { ABI, ADDRESSES, DEPLOY_BLOCK, EXPLORER, LOG_CHUNK, monadTestnet } from "./config";
+import { ABI, ADDRESSES, DEPLOY_BLOCK, EXPLORER, LOG_CHUNK, monadTestnet, rpc } from "./config";
 import { analyze, B, short, type Transfer, type WalletResult } from "./engine";
 import { buildReport, isFlagged, VERDICT_NAME, writeReport } from "./report";
 import { loadWallets } from "./wallets";
@@ -12,8 +12,8 @@ const POLL_MS = 400; // ~one Monad block
 const once = process.argv.includes("--once");
 
 const w = await loadWallets();
-const pub = createPublicClient({ chain: monadTestnet, transport: http() });
-const agent = createWalletClient({ account: w.agent, chain: monadTestnet, transport: http() });
+const pub = createPublicClient({ chain: monadTestnet, transport: rpc() });
+const agent = createWalletClient({ account: w.agent, chain: monadTestnet, transport: rpc() });
 
 // Known services: never judged, and money from them counts as a clean origin.
 const allowlist = [w.funder.address, ADDRESSES.exchange, ADDRESSES.token];

@@ -7,18 +7,17 @@ import {
   createPublicClient,
   createWalletClient,
   formatEther,
-  http,
   keccak256,
   parseEther,
   toBytes,
   type Hash,
   type PrivateKeyAccount,
 } from "viem";
-import { ABI, ADDRESSES, EXPLORER, monadTestnet } from "./config";
+import { ABI, ADDRESSES, EXPLORER, monadTestnet, rpc } from "./config";
 import { loadWallets, ROLES, type Wallets } from "./wallets";
 
-const pub = createPublicClient({ chain: monadTestnet, transport: http() });
-const wallet = (account: PrivateKeyAccount) => createWalletClient({ account, chain: monadTestnet, transport: http() });
+const pub = createPublicClient({ chain: monadTestnet, transport: rpc() });
+const wallet = (account: PrivateKeyAccount) => createWalletClient({ account, chain: monadTestnet, transport: rpc() });
 
 const D = (n: number) => BigInt(n) * 10n ** 18n; // dUSD has 18 decimals
 const RANSOM_AMOUNT = D(1_000);

@@ -19,7 +19,7 @@ h1{margin:0;font-size:22px;letter-spacing:.5px;color:var(--gold);text-transform:
 .dot.on{background:var(--clean);box-shadow:0 0 10px var(--clean)}
 .badge{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:12px;color:var(--muted)}
 .badge b{color:var(--gold)}
-main{display:grid;grid-template-columns:270px 1fr 380px;gap:16px;padding:16px 24px;height:calc(100vh - 66px)}
+main{display:grid;grid-template-columns:250px 1fr 330px;gap:16px;padding:16px 24px;height:calc(100vh - 66px)}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;overflow:hidden;display:flex;flex-direction:column}
 .panel h2{margin:0 0 10px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
 .step{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:10px;border:1px solid transparent;margin-bottom:6px}
@@ -108,7 +108,7 @@ svg{width:100%;height:100%}
   </section>
 
   <section class="panel stage">
-    <svg id="graph" viewBox="0 0 1100 600" preserveAspectRatio="xMidYMid meet"></svg>
+    <svg id="graph" viewBox="20 10 1080 590" preserveAspectRatio="xMidYMid meet"></svg>
     <div id="banner"><div class="card"><div class="lock" id="bIcon">🔒</div><div class="big" id="bBig">DEPOSIT HELD</div><div class="sub" id="bSub"></div></div></div>
     <div class="legend"><span><i style="background:#4b3a7a"></i>unknown</span><span><i style="background:var(--clean)"></i>clean</span><span><i style="background:var(--sus)"></i>suspicious</span><span><i style="background:var(--bad)"></i>malicious</span><span>click a wallet for its threat report</span></div>
   </section>
@@ -129,9 +129,9 @@ const NODES = {
   funder:   { x: 80,   y: 500, label: "Onramp",    icon: "🏦" },
   victim:   { x: 170,  y: 300, label: "Victim",    icon: "🧑‍💼" },
   ransom:   { x: 340,  y: 300, label: "Ransom",    icon: "💀" },
-  hop1:     { x: 520,  y: 120, label: "Hop 1",     icon: "👛" },
-  hop2:     { x: 520,  y: 240, label: "Hop 2",     icon: "👛" },
-  hop3:     { x: 520,  y: 360, label: "Hop 3",     icon: "👛" },
+  hop1:     { x: 520,  y: 90 , label: "Hop 1",     icon: "👛" },
+  hop2:     { x: 520,  y: 220, label: "Hop 2",     icon: "👛" },
+  hop3:     { x: 520,  y: 350, label: "Hop 3",     icon: "👛" },
   hop4:     { x: 520,  y: 480, label: "Hop 4",     icon: "👛" },
   merge:    { x: 700,  y: 300, label: "Merge",     icon: "🧲" },
   cashout:  { x: 860,  y: 300, label: "Cash-out",  icon: "🏃" },
@@ -183,6 +183,33 @@ function animateCoin(fromRole, toRole, amount) {
   if (edgeEls[key] && (prevVerdict[fromRole] === 2)) edgeEls[key].classList.add("hot");
 }
 
+// ---------- verdict visuals (driven live by the agent's own output, confirmed by the chain poll) ----------
+const liveUntil = {};
+function setNodeVerdict(role, v, hasAddress = true) {
+  const ne = nodeEls[role]; if (!ne) return;
+  ne.grp.classList.remove("v0", "v1", "v2");
+  if (v === 1 || v === 2) ne.grp.classList.add("v" + v);
+  if (v === 0 && hasAddress && (role === "victim" || role === "clean")) ne.grp.classList.add("v0");
+  ne.flag.textContent = v === 2 ? "MALICIOUS" : v === 1 ? "SUSPICIOUS" : "";
+  if (prevVerdict[role] !== undefined && prevVerdict[role] !== v && v >= 1) {
+    ne.grp.classList.remove("flash"); void ne.grp.offsetWidth; ne.grp.classList.add("flash");
+    reg.classList.remove("blink"); void reg.offsetWidth; reg.classList.add("blink");
+    regSub.textContent = `${NODES[role].label} → ${VNAME[v]}`;
+  }
+  prevVerdict[role] = v;
+  for (const [k, e] of Object.entries(edgeEls)) { const from = k.split(">")[0]; e.classList.toggle("hot", prevVerdict[from] === 2 && from !== "funder"); }
+}
+/** The agent prints e.g. "MALICIOUS  0x835b…4d55  RAPID_PASS_THROUGH + ..." — map the short address to a wallet. */
+function verdictFromAgentLine(line) {
+  const m = line.match(/(MALICIOUS|SUSPICIOUS)\s+0x([0-9a-fA-F]{4})…([0-9a-fA-F]{4})/);
+  if (!m || !state || !state.nodes) return;
+  const v = m[1] === "MALICIOUS" ? 2 : 1, pre = ("0x" + m[2]).toLowerCase(), suf = m[3].toLowerCase();
+  for (const [role, n] of Object.entries(state.nodes)) {
+    const a = (n.address || "").toLowerCase();
+    if (a.startsWith(pre) && a.endsWith(suf)) { liveUntil[role] = Date.now() + 15000; setNodeVerdict(role, v); }
+  }
+}
+
 // ---------- state rendering ----------
 const short = (a) => a ? a.slice(0, 6) + "…" + a.slice(-4) : "";
 const dusd = (s) => s == null ? "" : (Number(BigInt(s) / 10n ** 14n) / 10000).toLocaleString("en-US") + " dUSD";
@@ -195,20 +222,10 @@ function applyState(s) {
     const n = (s.nodes || {})[role] || {};
     ne.sub.textContent = role === "exchange" ? "checks registry on deposit" : (n.address ? short(n.address) + (n.balance && n.balance !== "0" ? " · " + dusd(n.balance) : "") : "");
     if (role === "exchange" || role === "funder") continue;
-    const v = n.verdict;
-    ne.grp.classList.remove("v0", "v1", "v2");
-    if (v === 1 || v === 2) ne.grp.classList.add("v" + v);
-    if (v === 0 && n.address && (role === "victim" || role === "clean")) ne.grp.classList.add("v0");
-    ne.flag.textContent = v === 2 ? "MALICIOUS" : v === 1 ? "SUSPICIOUS" : "";
-    if (prevVerdict[role] !== undefined && prevVerdict[role] !== v && v >= 1) {
-      ne.grp.classList.remove("flash"); void ne.grp.offsetWidth; ne.grp.classList.add("flash");
-      reg.classList.remove("blink"); void reg.offsetWidth; reg.classList.add("blink");
-      regSub.textContent = `${NODES[role].label} → ${VNAME[v]}`;
-    }
-    prevVerdict[role] = v;
+    // never downgrade a verdict the agent already announced live; the poll catches up a few seconds later
+    if (n.verdict === null || (prevVerdict[role] > (n.verdict ?? 0) && liveUntil[role] > Date.now())) continue;
+    setNodeVerdict(role, n.verdict, !!n.address);
   }
-  // re-color edges out of malicious wallets
-  for (const [k, e] of Object.entries(edgeEls)) { const from = k.split(">")[0]; e.classList.toggle("hot", prevVerdict[from] === 2 && k !== "funder>victim"); }
   // agent + buttons
   $("#agentDot").classList.toggle("on", !!s.agentRunning);
   $("#agentTxt").textContent = s.agentRunning ? "running" : "stopped";
@@ -247,6 +264,7 @@ function toast(t) { const x = $("#toast"); x.textContent = t; x.style.display = 
 
 // ---------- feed ----------
 function feedLine(ev) {
+  if (ev.source === "agent" && Date.now() - ev.at < 10000) verdictFromAgentLine(ev.line);
   const f = $("#feed"), d = document.createElement("div");
   let cls = ev.source;
   if (/MALICIOUS/.test(ev.line)) cls += " mal";
