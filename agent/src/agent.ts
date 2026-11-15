@@ -39,13 +39,29 @@ async function loadEvidence(): Promise<Map<string, `0x${string}`>> {
   return out;
 }
 
+/**
+ * Monad's public RPC is load-balanced: a block that one node just served can be "not found" on the next.
+ * Retry reads briefly instead of treating lag as failure.
+ */
+async function retry<T>(fn: () => Promise<T>, tries = 8, waitMs = 250): Promise<T> {
+  for (let i = 0; ; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (i >= tries - 1) throw e;
+      await Bun.sleep(waitMs);
+    }
+  }
+}
+
 const blockTime = new Map<bigint, number>();
 async function timestampOf(n: bigint) {
-  if (!blockTime.has(n)) blockTime.set(n, Number((await pub.getBlock({ blockNumber: n })).timestamp));
+  if (!blockTime.has(n)) blockTime.set(n, Number((await retry(() => pub.getBlock({ blockNumber: n }))).timestamp));
   return blockTime.get(n)!;
 }
 
 const transfers: Transfer[] = [];
+const seen = new Set<string>(); // txHash:logIndex — a chunk re-read after a lagging-node error must not double-count
 let nextBlock = DEPLOY_BLOCK;
 
 async function pull(): Promise<number> {
@@ -53,7 +69,8 @@ async function pull(): Promise<number> {
   let added = 0;
   while (nextBlock <= head) {
     const to = nextBlock + LOG_CHUNK - 1n > head ? head : nextBlock + LOG_CHUNK - 1n;
-    const logs = await pub.getLogs({ address: ADDRESSES.token, fromBlock: nextBlock, toBlock: to });
+    const from = nextBlock;
+    const logs = await retry(() => pub.getLogs({ address: ADDRESSES.token, fromBlock: from, toBlock: to }));
     const parsed = parseEventLogs({ abi: ABI.token, logs: logs as Log[], eventName: "Transfer" }) as unknown as {
       args: { from: `0x${string}`; to: `0x${string}`; value: bigint };
       blockNumber: bigint;
@@ -61,6 +78,9 @@ async function pull(): Promise<number> {
       logIndex: number;
     }[];
     for (const l of parsed) {
+      const key = `${l.transactionHash}:${l.logIndex}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
       transfers.push({
         from: l.args.from,
         to: l.args.to,
@@ -125,19 +145,28 @@ async function tick() {
       reports.map((x) => x.r.evidenceHash ?? zero),
     ],
   });
-  const rcpt = await pub.waitForTransactionReceipt({ hash: h });
-  if (rcpt.status !== "success") throw new Error(`setVerdicts reverted: ${EXPLORER}/tx/${h}`);
+  // The tx is sent: record it now, so a lagging-node error below can never trigger a duplicate send.
+  const previous = reports.map((x) => [x.r.wallet.toLowerCase(), posted.get(x.r.wallet.toLowerCase())] as const);
+  for (const x of reports) posted.set(x.r.wallet.toLowerCase(), { verdict: x.r.verdict, behaviors: x.r.behaviors });
 
-  const newest = transfers.reduce((m, t) => (t.timestamp > m ? t.timestamp : m), 0);
-  const landed = Number((await pub.getBlock({ blockNumber: rcpt.blockNumber })).timestamp);
-  log(`posted ${reports.length} verdict(s) onchain in one tx  ${EXPLORER}/tx/${h}`);
-  log(`verdict landed ${landed - newest}s (chain time) after the latest transfer it covers`);
-
-  for (const x of reports) {
-    posted.set(x.r.wallet.toLowerCase(), { verdict: x.r.verdict, behaviors: x.r.behaviors });
-    await writeReport(x.report, x.hash, h);
+  const rcpt = await retry(() => pub.waitForTransactionReceipt({ hash: h }));
+  if (rcpt.status !== "success") {
+    for (const [wallet, prev] of previous) prev ? posted.set(wallet, prev) : posted.delete(wallet);
+    throw new Error(`setVerdicts reverted: ${EXPLORER}/tx/${h}`);
   }
+  log(`posted ${reports.length} verdict(s) onchain in one tx  ${EXPLORER}/tx/${h}`);
+
+  for (const x of reports) await writeReport(x.report, x.hash, h);
   log(`reports written to agent/reports/`);
+
+  // Latency is informational: never let a lagging node fail the tick over it.
+  try {
+    const newest = transfers.reduce((m, t) => (t.timestamp > m ? t.timestamp : m), 0);
+    const landed = await timestampOf(rcpt.blockNumber);
+    log(`verdict landed ${landed - newest}s (chain time) after the latest transfer it covers`);
+  } catch {
+    log(`verdict landed (latency unavailable: RPC lag)`);
+  }
 }
 
 log(`agent ${w.agent.address} watching dUSD ${ADDRESSES.token} from block ${DEPLOY_BLOCK}`);
