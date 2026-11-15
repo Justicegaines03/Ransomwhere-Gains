@@ -48,7 +48,18 @@ Agent / exchange owner (pilot): `0x489D04aE2c40755c3328EeC03f1407B251220632`
 cd agent && bun run ui     # http://127.0.0.1:4545
 ```
 
-Buttons run the same commands as the CLI below: **Reset** (fresh wallets only when the current ones were used), **Start agent**, **Clean deposit**, **Run incident**, **Cash out**. Coins animate along the money path, wallets turn red as verdicts land, and the exchange shows DEPOSIT HELD. Click any wallet for its threat report. Run only one agent at a time (UI or CLI).
+A wallet EDR console. The **Attack simulation** bar runs the same commands as the CLI below: **Reset** (fresh wallets only when the current ones were used), **Start agent**, **Clean deposit**, **Run ransomware incident**, **Attacker cashes out**.
+
+| Console view | What it shows |
+|---|---|
+| KPIs | Wallets monitored, active threats, funds held, time to verdict, clean deposits credited |
+| Threats | Every flagged wallet: confidence, classification (ransom wallet, layering hop, consolidation, cash-out), mitigation status; earlier runs on demand |
+| Money Trail | The incident as one attack chain rooted at the ransom wallet: coins move per transfer, wallets turn red as verdicts land, DEPOSIT HELD when the exchange contains it |
+| Laundering Matrix | AML stages (Evidence, Placement, Layering, Propagation, Integration) x our behaviors, like an ATT&CK matrix: lit cells fired for the selected wallet |
+| Timeline | The selected wallet's money movements and its onchain verdict, in order |
+| Response | Held deposits with a **Release funds** action for false positives (calls `DemoExchange.release`), report hash, evidence fingerprint, explorer links |
+
+Run only one agent at a time (UI or CLI). The earlier, simpler UI is tagged `v2-ui-simple`.
 
 **Before presenting:**
 1. Click **Reset**. A used set of wallets gets replaced (about 3 MON from the funder); the agent restarts on its own.
@@ -58,7 +69,7 @@ Buttons run the same commands as the CLI below: **Reset** (fresh wallets only wh
 
 ## Fallback
 
-The working CLI demo is tagged `v1-cli-stable`. To get a separate, ready-to-run copy without touching this one:
+The working CLI demo is tagged `v1-cli-stable`. The simple UI before the console redesign is tagged `v2-ui-simple`. To get a separate, ready-to-run copy without touching this one:
 
 ```bash
 bun scripts/fallback.ts      # -> ../Ransomwhere-Gains-stable at v1-cli-stable
