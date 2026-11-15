@@ -66,7 +66,7 @@ async function setup(w: Wallets) {
   let nonce = await pub.getTransactionCount({ address: f.address, blockTag: "pending" });
   const gas: Hash[] = [];
   for (const r of ROLES) {
-    const target = r === "agent" ? parseEther("0.6") : parseEther("0.06"); // a full run uses well under half of this
+    const target = r === "agent" ? parseEther("0.4") : parseEther("0.04"); // a full run uses well under half of this
     const bal = await pub.getBalance({ address: w[r].address });
     if (bal >= target / 2n) continue;
     const h = await wallet(f).sendTransaction({ to: w[r].address, value: target - bal, nonce: nonce++ });

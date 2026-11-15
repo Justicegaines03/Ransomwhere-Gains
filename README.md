@@ -88,7 +88,7 @@ Suggested flow: `/exchange` (everyday user deposits, credited) → `/victim` (pa
 The agent scans from the block where the current wallets were created (`agent/scan-from.json`, written by setup), so it starts instantly; `bun run src/agent.ts --full` rescans from the deploy block.
 
 **Before presenting:**
-1. Click **Reset wallets**. A used set of wallets gets replaced (about 1 MON from the funder); the agent restarts on its own.
+1. Click **Reset wallets**. A used set of wallets gets replaced (about 0.8 MON from the funder); the agent restarts on its own.
 2. Wait for the agent badge to read **running** and the feed to show `watching dUSD` (a few seconds).
 3. Steps 1 and 2 show green ticks. Then run **Clean deposit → Victim pays → Attacker launders → Attempt cash-out** (or use the sender views above).
 4. Keep the onramp wallet (`WALLET2`) above about 15 MON (top up at `faucet.monad.xyz`). Below that, Reset still works but sends gas one wallet at a time (about 40 s), because back-to-back MON transfers from an account near Monad’s 10 MON reserve revert.
