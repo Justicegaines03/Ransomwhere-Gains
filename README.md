@@ -81,3 +81,5 @@ FATF / FinCEN source tags are on each rule; exact indicator wording is still bei
 - Ransom wallet flagged malicious from the ransom note as the ransom arrived; all 4 hops flagged during the split;
   merge + cash-out wallets flagged ~2 s (chain time) after the last hop — before the cash-out was attempted.
 - 7 wallets flagged, 0 false positives on the victim, the clean depositor, or the onramp.
+
+Screenshots of the run: [`docs/screenshots/`](docs/screenshots/README.md).
