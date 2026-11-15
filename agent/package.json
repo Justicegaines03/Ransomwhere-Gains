@@ -1,0 +1,20 @@
+{
+  "name": "ransomwhere-gains-agent",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "abi": "bun run scripts/export-abi.ts",
+    "setup": "bun run src/stage.ts setup",
+    "clean-deposit": "bun run src/stage.ts clean",
+    "incident": "bun run src/stage.ts incident",
+    "cashout": "bun run src/stage.ts cashout",
+    "agent": "bun run src/agent.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "viem": "2.57.20"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.4"
+  }
+}
