@@ -160,7 +160,7 @@ async function readState() {
   const deposits: unknown[] = [];
   if (count !== null) {
     const n = Number(count);
-    const idx = Array.from({ length: Math.min(n, 8) }, (_, k) => n - 1 - k).reverse();
+    const idx = Array.from({ length: Math.min(n, 40) }, (_, k) => n - 1 - k).reverse();
     const rows = await Promise.all(
       idx.map((i) => pub.readContract({ address: ADDRESSES.exchange, abi: ABI.exchange, functionName: "deposits", args: [BigInt(i)] }).catch(() => null)),
     );

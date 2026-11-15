@@ -23,6 +23,8 @@ Held deposit: [`0x3488bc82…`](https://testnet.monadexplorer.com/tx/0x3488bc822
 
 | # | Screenshot | What it shows |
 |---|---|---|
-| 7 | [07-console-funds-held.jpg](07-console-funds-held.jpg) | The console after the cash-out: THREAT MITIGATED / FUNDS HELD over the Money Trail, Threats list with every laundering wallet, KPIs (funds held, active threats) |
+| 7 | [07-console-incident-flagged.jpg](07-console-incident-flagged.jpg) | After **Run incident**: 7 threats, every laundering wallet red on the money trail, 2 s to verdict |
+| 8 | [08-console-deposit-held.jpg](08-console-deposit-held.jpg) | After **Attempt cash-out**: "Threat mitigated / Deposit held", funds held 1,000 dUSD, cash-out wallet status Funds held |
+| 9 | [09-console-laundering-matrix.jpg](09-console-laundering-matrix.jpg) | Laundering matrix for the cash-out wallet: matched behaviors by stage |
 
-Screenshots 5–6 show the earlier, simpler UI (tag `v2-ui-simple`).
+Screenshots 5–6 show the first, simpler UI (tag `v2-ui-simple`).

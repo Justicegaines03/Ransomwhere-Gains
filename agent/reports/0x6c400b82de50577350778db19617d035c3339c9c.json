@@ -1,0 +1,39 @@
+{
+  "wallet": "0x6c400b82de50577350778db19617d035c3339c9c",
+  "verdict": "MALICIOUS",
+  "behaviors": 18,
+  "matched": [
+    {
+      "behavior": "NEW_WALLET_CHAIN",
+      "title": "New-wallet chain",
+      "source": "FATF 2020 VA Red Flags (funds moved through newly created wallets) — to confirm",
+      "detail": "No history before receiving from 0x26D3…7b3a, which also had no history",
+      "txs": [
+        "0xbf8c0bc7295c8fdddcfca290c2f3a8690ac692af8d024cf886f71c872a6d2eea"
+      ]
+    },
+    {
+      "behavior": "TAINTED_BY_FLAGGED",
+      "title": "Received funds from a malicious wallet",
+      "source": "Downstream propagation (pilot rule)",
+      "detail": "Received 1,000 dUSD from malicious wallet 0x26D3…7b3a",
+      "txs": [
+        "0xbf8c0bc7295c8fdddcfca290c2f3a8690ac692af8d024cf886f71c872a6d2eea"
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "time": "2026-11-15T21:58:13.000Z",
+      "direction": "in",
+      "counterparty": "0x26D35620322301C02F04951BCd5320A629aB7b3a",
+      "amount": "1,000 dUSD",
+      "tx": "0xbf8c0bc7295c8fdddcfca290c2f3a8690ac692af8d024cf886f71c872a6d2eea"
+    }
+  ],
+  "evidenceHash": null,
+  "chainId": 10143,
+  "generatedAt": "2026-11-15T21:58:29.254Z",
+  "reportHash": "0x4164b6dc4b98d6d3eb45147adb0318c6c78c41d3619584814e72e6d43b07a589",
+  "verdictTx": "0x376e9ade9576840610ba52acef23be36c5ccf82ff64cbd358b9581199e6c08bf"
+}

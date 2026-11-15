@@ -48,7 +48,7 @@ Agent / exchange owner (pilot): `0x489D04aE2c40755c3328EeC03f1407B251220632`
 cd agent && bun run ui     # http://127.0.0.1:4545
 ```
 
-A wallet EDR console. The **Attack simulation** bar runs the same commands as the CLI below: **Reset** (fresh wallets only when the current ones were used), **Start agent**, **Clean deposit**, **Run ransomware incident**, **Attacker cashes out**.
+A wallet EDR console. The **Simulation** bar runs the same commands as the CLI below: **Reset wallets** (fresh wallets only when the current ones were used), **Start agent**, **Clean deposit**, **Run incident**, **Attempt cash-out**.
 
 | Console view | What it shows |
 |---|---|
@@ -59,12 +59,12 @@ A wallet EDR console. The **Attack simulation** bar runs the same commands as th
 | Timeline | The selected wallet's money movements and its onchain verdict, in order |
 | Response | Held deposits with a **Release funds** action for false positives (calls `DemoExchange.release`), report hash, evidence fingerprint, explorer links |
 
-Run only one agent at a time (UI or CLI). The earlier, simpler UI is tagged `v2-ui-simple`.
+Run only one agent at a time (UI or CLI). Earlier UI versions are tagged `v3-console` (first console) and `v2-ui-simple`. KPIs count the current trail only.
 
 **Before presenting:**
-1. Click **Reset**. A used set of wallets gets replaced (about 3 MON from the funder); the agent restarts on its own.
+1. Click **Reset wallets**. A used set of wallets gets replaced (about 3 MON from the funder); the agent restarts on its own.
 2. Wait for the agent badge to read **running** and the feed to show `watching dUSD` (about 20 s of history scan).
-3. Steps 0 and 1 show green ticks. Then run **Clean deposit → Run incident → Cash out**.
+3. Steps 1 and 2 show green ticks. Then run **Clean deposit → Run incident → Attempt cash-out**.
 4. Fallbacks if the testnet is slow: the screenshots in [`docs/screenshots/`](docs/screenshots/README.md), or the stable copy below.
 
 ## Fallback

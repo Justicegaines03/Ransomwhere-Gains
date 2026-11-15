@@ -6,227 +6,272 @@
 <title>Ransomwhere-Gains Console</title>
 <style>
 :root{
-  --bg:#0a0d14; --panel:#111622; --panel2:#171d2c; --line:#232b3e; --text:#e8ecf5; --muted:#8b95ad; --dim:#5b6580;
-  --gold:#ffbc21; --orange:#f3693a; --accent:#8d5cff; --clean:#2fd391; --sus:#f5b83d; --bad:#ff4d6d; --blue:#6aa6ff;
+  --bg:#0b0c11; --panel:#12131a; --raise:#181a23; --line:#23252f; --line2:#2d303c;
+  --text:#e7e8ee; --muted:#8c90a0; --dim:#5c6072;
+  --accent:#7c5cff; --accent-soft:rgba(124,92,255,.14);
+  --bad:#ef5170; --bad-soft:rgba(239,81,112,.13);
+  --warn:#e0a03a; --warn-soft:rgba(224,160,58,.14);
+  --ok:#3ecf8e; --ok-soft:rgba(62,207,142,.12);
+  --info:#5b9dff;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--text);font:13px/1.45 -apple-system,BlinkMacSystemFont,"Inter",sans-serif;display:grid;grid-template-columns:64px 1fr;grid-template-rows:52px 56px 1fr;overflow:hidden}
+body{margin:0;background:var(--bg);color:var(--text);font:13px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-feature-settings:"tnum";
+  display:grid;grid-template-columns:60px 1fr;grid-template-rows:48px 48px 1fr;overflow:hidden}
+svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+a{color:var(--info);text-decoration:none}a:hover{text-decoration:underline}
+code,.mono{font-family:var(--mono);font-size:11.5px}
+
 /* top bar */
-.top{grid-column:1/3;display:flex;align-items:center;gap:14px;padding:0 18px;border-bottom:1px solid var(--line);background:#0d111b}
-.logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--orange));display:grid;place-items:center;color:#1a0d00;font-weight:900;font-size:13px}
-.brand b{font-size:15px;letter-spacing:.3px}.brand span{color:var(--muted);margin-left:8px;font-size:12px}
-.scope{margin-left:18px;padding:5px 10px;border:1px solid var(--line);border-radius:6px;color:var(--muted);font-size:12px}
-.scope b{color:var(--text)}
-.right{margin-left:auto;display:flex;gap:10px}
-.pill{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 12px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}
-.pill b{color:var(--text)}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}
-.dot.on{background:var(--clean);box-shadow:0 0 8px var(--clean)}
-/* side nav */
-.side{grid-row:2/4;border-right:1px solid var(--line);background:#0d111b;display:flex;flex-direction:column;align-items:center;padding-top:10px;gap:4px}
-.nav{width:48px;padding:8px 0;border-radius:8px;text-align:center;color:var(--dim);font-size:10px;cursor:pointer}
-.nav i{display:block;font-style:normal;font-size:18px;margin-bottom:2px}
-.nav.on{background:var(--panel2);color:var(--text)}
+.top{grid-column:1/3;display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+.mark{width:26px;height:26px;border-radius:6px;background:var(--accent);display:grid;place-items:center;color:#fff;font-weight:700;font-size:11px;letter-spacing:.3px}
+.crumb{font-weight:600}.crumb span{color:var(--dim);font-weight:400;margin:0 8px}.crumb em{font-style:normal;color:var(--muted);font-weight:400}
+.right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--muted);height:28px}
+.chip b{color:var(--text);font-weight:600}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.dot.on{background:var(--ok)}
+
+/* rail */
+.rail{grid-row:2/4;border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;align-items:center;padding-top:8px;gap:2px}
+.nav{width:52px;padding:9px 0 7px;border-radius:6px;text-align:center;color:var(--dim);font-size:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+.nav svg.i{width:18px;height:18px}
 .nav:hover{color:var(--text)}
+.nav.on{color:var(--text);background:var(--raise)}
+.nav.on:before{content:"";position:absolute;left:-4px;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--accent)}
+
 /* simulation bar */
-.sim{display:flex;align-items:center;gap:8px;padding:0 18px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,#1a1326,#0d111b 60%)}
-.sim .lbl{font-size:10px;letter-spacing:1.6px;color:var(--orange);font-weight:800;margin-right:6px;white-space:nowrap}
+.sim{display:flex;align-items:center;gap:6px;padding:0 16px;border-bottom:1px solid var(--line);background:var(--bg)}
+.sim .lbl{font-size:11px;color:var(--muted);margin-right:10px;white-space:nowrap}
+.sim .lbl b{color:var(--text);font-weight:600}
 .step{display:flex;align-items:center;gap:6px}
-.step .n{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--panel2);color:var(--muted);font-size:11px;font-weight:700;border:1px solid var(--line)}
-.step.done .n{background:var(--clean);color:#03140c;border-color:var(--clean)}
-.step.next .n{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 0 10px var(--accent)}
-.arrow{color:var(--dim)}
-button{all:unset;cursor:pointer;font-weight:700;font-size:12px;padding:7px 11px;border-radius:7px;background:var(--panel2);border:1px solid var(--line);color:var(--text);white-space:nowrap}
-button:hover{border-color:var(--accent)}
-button.go{background:linear-gradient(90deg,var(--gold),var(--orange));color:#1a0d00;border:none}
-button.danger{background:#2a1220;border-color:#5a2038;color:#ffb3c2}
-button[disabled]{opacity:.35;cursor:not-allowed}
-/* main */
-main{padding:14px 18px;display:grid;grid-template-columns:minmax(420px,38%) 1fr;grid-template-rows:auto 1fr;gap:14px;overflow:hidden;min-height:0}
+.step .n{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;color:var(--dim);font-size:10px;font-weight:600;border:1px solid var(--line2)}
+.step .n svg{display:none;width:11px;height:11px;stroke-width:2.4}
+.step.done .n{border-color:var(--ok);color:var(--ok)}
+.step.done .n span{display:none}.step.done .n svg{display:block}
+.step.next .n{border-color:var(--accent);color:var(--accent)}
+.sep{width:18px;height:1px;background:var(--line2);margin:0 2px}
+button{all:unset;cursor:pointer;font-weight:500;font-size:12px;height:28px;padding:0 11px;border-radius:6px;border:1px solid var(--line2);color:var(--text);white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:background .12s,border-color .12s}
+button:hover{background:var(--raise);border-color:#3a3e4c}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.step.next button.act,button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.step.next button.act:hover,button.primary:hover{background:#6c4cf0}
+button.danger{border-color:var(--bad);color:var(--bad)}
+button[disabled]{opacity:.38;cursor:not-allowed;background:none}
+.busy{margin-left:auto;color:var(--muted);font-size:12px;display:none;align-items:center;gap:8px;white-space:nowrap}
+.busy.on{display:flex}
+.spin{width:12px;height:12px;border:2px solid var(--line2);border-top-color:var(--accent);border-radius:50%;animation:rot .8s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* layout */
+main{padding:14px 16px;display:grid;grid-template-columns:minmax(440px,38%) 1fr;grid-template-rows:auto 1fr;gap:12px;overflow:hidden;min-height:0}
 .kpis{grid-column:1/3;display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
-.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
-.kpi .t{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px}
-.kpi .v{font-size:24px;font-weight:800;margin-top:2px}
-.kpi.bad .v{color:var(--bad)}.kpi.good .v{color:var(--clean)}.kpi.gold .v{color:var(--gold)}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
-.card h2{margin:0;padding:10px 14px;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
-.card h2 .count{background:var(--bad);color:#fff;border-radius:999px;padding:0 7px;font-size:10px}
-.leftcol{display:grid;grid-template-rows:3fr 2fr;gap:14px;min-height:0}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+.kpi .t{color:var(--muted);font-size:11.5px}
+.kpi .v{font-size:22px;font-weight:600;margin-top:2px;letter-spacing:-.2px}
+.kpi .v small{font-size:12px;color:var(--muted);font-weight:400;margin-left:4px}
+.kpi.alert .v{color:var(--bad)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.card>h2{margin:0;padding:10px 14px;font-size:12.5px;font-weight:600;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.card>h2 .count{color:var(--muted);font-weight:400}
+.card>h2 .link{margin-left:auto;font-weight:400;font-size:12px;cursor:pointer;color:var(--info)}
+.leftcol{display:grid;grid-template-rows:3fr 2fr;gap:12px;min-height:0}
 .scroll{overflow:auto;min-height:0;flex:1}
+main.activity .kpis,main.activity #threatsCard,main.activity #detail{display:none}
+main.activity{grid-template-columns:1fr;grid-template-rows:1fr}
+main.activity .leftcol{grid-template-rows:1fr}
+
 table{width:100%;border-collapse:collapse}
-th{position:sticky;top:0;background:var(--panel);text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);padding:7px 10px;border-bottom:1px solid var(--line)}
-td{padding:7px 8px;white-space:nowrap;border-bottom:1px solid #1a2132;vertical-align:middle}
+th{position:sticky;top:0;background:var(--panel);text-align:left;font-size:11px;font-weight:500;color:var(--dim);padding:7px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:7px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td .addr{display:block;font-size:11px;color:var(--dim)}
 tr.row{cursor:pointer}
-tr.row:hover td{background:#151b29}
-tr.row.sel td{background:#1b1730}
-tr.old td{opacity:.45}
-.conf{font-weight:800;font-size:11px;padding:2px 8px;border-radius:999px}
-.conf.m{background:#3a1220;color:var(--bad)}.conf.s{background:#33270e;color:var(--sus)}.conf.c{background:#0f2a20;color:var(--clean)}
-.sev{width:9px;height:9px;border-radius:50%;display:inline-block}
-.sev.m{background:var(--bad);box-shadow:0 0 6px var(--bad)}.sev.s{background:var(--sus)}
-.mit{font-size:11px;font-weight:700}
-.mit.held{color:var(--gold)}.mit.mon{color:var(--muted)}.mit.rel{color:var(--blue)}
-.addr{font-family:Menlo,monospace;font-size:11px;color:var(--muted);word-break:break-all}
-.tabs{display:flex;gap:2px;padding:0 10px;border-bottom:1px solid var(--line)}
-.tab{padding:10px 12px;color:var(--muted);cursor:pointer;font-weight:600;border-bottom:2px solid transparent}
-.tab.on{color:var(--text);border-color:var(--accent)}
-#feed{font:11.5px/1.5 Menlo,monospace;padding:8px 10px}
-#feed div{white-space:pre-wrap;word-break:break-all}
-#feed .agent{color:#cfd6ff}#feed .stage{color:#9fb4ff}#feed .ui{color:var(--dim)}
-#feed .mal{color:var(--bad);font-weight:700}#feed .held{color:var(--gold);font-weight:800}#feed .ok{color:var(--clean)}
-a{color:var(--blue)}
+tr.row:hover td{background:var(--raise)}
+tr.row.sel td{background:var(--accent-soft)}
+tr.row.sel td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+tr.old td{color:var(--dim)}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;padding:2px 8px;border-radius:4px}
+.tag:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.tag.m{background:var(--bad-soft);color:var(--bad)}.tag.s{background:var(--warn-soft);color:var(--warn)}.tag.c{background:var(--ok-soft);color:var(--ok)}
+.st{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:5px}
+.st.held{color:var(--warn)}.st.rel{color:var(--info)}
+.st svg.i{width:13px;height:13px}
+.addr{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.empty{color:var(--dim);padding:28px 20px;text-align:center}
+
+#feed{font:11.5px/1.6 var(--mono);padding:8px 12px}
+#feed div{white-space:pre-wrap;word-break:break-all;color:var(--muted)}
+#feed .src{color:var(--dim)}
+#feed .mal{color:var(--bad)}#feed .held{color:var(--warn)}#feed .ok{color:var(--ok)}
+
 /* detail */
-.detail-head{padding:12px 16px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:6px 16px}
-.detail-head .w{font-size:16px;font-weight:800}
-.detail-head .meta{color:var(--muted);font-size:12px;display:flex;gap:14px;flex-wrap:wrap}
-.detail-head .meta b{color:var(--text);font-weight:600}
+.dhead{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:16px}
+.dhead .w{font-size:15px;font-weight:600}
+.dhead .w .addr{font-size:12.5px;margin-left:8px}
+.dhead .meta{color:var(--muted);font-size:12px;display:flex;gap:18px;flex-wrap:wrap;margin-top:3px}
+.dhead .meta b{color:var(--text);font-weight:500}
+.dhead .end{margin-left:auto}
+.tabs{display:flex;padding:0 8px;border-bottom:1px solid var(--line)}
+.tab{padding:9px 10px;margin:0 2px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;font-weight:500}
+.tab:hover{color:var(--text)}
+.tab.on{color:var(--text);border-color:var(--accent)}
 .pane{display:none;flex:1;min-height:0;position:relative}
 .pane.on{display:flex;flex-direction:column}
-svg{width:100%;height:100%}
-.edge{stroke:#2a3350;stroke-width:2;fill:none}
-.edge.hot{stroke:var(--bad);stroke-width:3;filter:drop-shadow(0 0 3px var(--bad))}
-.node circle.body{fill:var(--panel2);stroke:#3a4566;stroke-width:2;transition:fill .4s,stroke .4s}
-.node circle.selring{fill:none;stroke:var(--accent);stroke-width:3;stroke-dasharray:6 5;opacity:0}
-.node.sel circle.selring{opacity:1;animation:spin 6s linear infinite}
-@keyframes spin{to{stroke-dashoffset:-110}}
-.node text{fill:var(--text);font-size:13px;text-anchor:middle;pointer-events:none}
-.node text.sub{fill:var(--muted);font-size:10.5px}
-.node text.icon{font-size:21px}
+.pad{padding:16px;overflow:auto}
+.note{color:var(--dim);font-size:11.5px}
+
+/* trail graph */
+#graph{width:100%;height:100%}
+.edge{stroke:var(--line2);stroke-width:1.5;fill:none;transition:stroke .3s}
+.edge.hot{stroke:var(--bad);stroke-width:2}
 .node{cursor:pointer}
-.node.v0 circle.body{stroke:var(--clean)}
-.node.v1 circle.body{stroke:var(--sus);fill:#2a2108}
-.node.v2 circle.body{stroke:var(--bad);fill:#33101b;filter:drop-shadow(0 0 9px var(--bad))}
-.node.flash{animation:shake .55s}
-.node.recv circle.body{animation:pulse .7s}
-@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
-@keyframes pulse{0%{stroke-width:2}50%{stroke-width:9}100%{stroke-width:2}}
-.flag{fill:var(--bad);font-size:10px;font-weight:800;letter-spacing:1px}
-.coin{fill:var(--gold);filter:drop-shadow(0 0 6px var(--gold))}
-.coinlabel{fill:var(--gold);font-size:11px;font-weight:700;text-anchor:middle}
-.registry rect{fill:#0d1120;stroke:var(--accent);stroke-width:1.5}
-.registry.blink rect{animation:blink 1s}
-@keyframes blink{0%{fill:#0d1120}30%{fill:#3b2a7a}100%{fill:#0d1120}}
-.registry text{fill:var(--text);font-size:12px;text-anchor:middle}
-.trailbar{display:flex;gap:16px;padding:8px 14px;color:var(--muted);font-size:12px;border-bottom:1px solid var(--line)}
-.trailbar b{color:var(--text)}
-.legend{position:absolute;left:12px;bottom:8px;display:flex;gap:12px;font-size:11px;color:var(--muted)}
-.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
-#banner{position:absolute;inset:0;display:none;place-items:center;pointer-events:none;z-index:3}
-#banner .card2{background:rgba(18,6,12,.94);border:2px solid var(--bad);border-radius:14px;padding:22px 38px;text-align:center;box-shadow:0 0 60px rgba(255,77,109,.6);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
-#banner.ok .card2{border-color:var(--clean);box-shadow:0 0 50px rgba(47,211,145,.5);background:rgba(4,20,12,.94)}
-#banner .k{font-size:11px;letter-spacing:2px;color:var(--muted)}
-#banner .big{font-size:38px;font-weight:900;letter-spacing:1.5px;color:var(--bad)}
-#banner.ok .big{color:var(--clean)}
-#banner .lock{font-size:48px}
-#banner .sub{font-size:15px;margin-top:4px}
-@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.node circle.body{fill:var(--raise);stroke:#3b3f4e;stroke-width:1.5;transition:fill .3s,stroke .3s}
+.node path.ic{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;transition:stroke .3s}
+.node circle.ring{fill:none;stroke:var(--accent);stroke-width:1.5;opacity:0}
+.node.sel circle.ring{opacity:1}
+.node text{fill:var(--text);font-size:12.5px;font-weight:500;text-anchor:middle;pointer-events:none}
+.node text.sub{fill:var(--dim);font-size:10.5px;font-weight:400;font-family:var(--mono)}
+.node text.flag{font-size:9.5px;font-weight:600;letter-spacing:.8px}
+.node.v0 circle.body{stroke:var(--ok)}.node.v0 path.ic{stroke:var(--ok)}
+.node.v1 circle.body{stroke:var(--warn);fill:#231c10}.node.v1 path.ic{stroke:var(--warn)}.node.v1 text.flag{fill:var(--warn)}
+.node.v2 circle.body{stroke:var(--bad);fill:#26121a}.node.v2 path.ic{stroke:var(--bad)}.node.v2 text.flag{fill:var(--bad)}
+.node.flash circle.body{animation:hit .9s ease-out}
+.node.recv circle.body{animation:recv .6s ease-out}
+@keyframes hit{0%{stroke-width:1.5}25%{stroke-width:10}100%{stroke-width:1.5}}
+@keyframes recv{0%{stroke-width:1.5}40%{stroke-width:5}100%{stroke-width:1.5}}
+.coin{fill:var(--text)}
+.coinlabel{fill:var(--text);font-size:10.5px;font-family:var(--mono);text-anchor:middle}
+.reg rect{fill:var(--panel);stroke:var(--line2)}
+.reg.blink rect{animation:regb 1s ease-out}
+@keyframes regb{0%{stroke:var(--accent);stroke-width:3}100%{stroke:var(--line2);stroke-width:1}}
+.reg text{fill:var(--text);font-size:12px;font-weight:500}
+.reg text.s{fill:var(--muted);font-size:11px;font-weight:400}
+.legend{position:absolute;left:14px;bottom:10px;display:flex;gap:14px;font-size:11.5px;color:var(--muted)}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;border:1.5px solid}
+
+/* outcome banner */
+#banner{position:absolute;inset:0;display:none;place-items:center;pointer-events:none;z-index:3;background:rgba(11,12,17,.55)}
+#banner .b{background:var(--panel);border:1px solid var(--line2);border-left:4px solid var(--bad);border-radius:8px;padding:20px 28px 20px 24px;display:flex;gap:18px;align-items:center;box-shadow:0 24px 60px rgba(0,0,0,.55);animation:rise .28s ease-out}
+#banner.ok .b{border-left-color:var(--ok)}
+#banner .ico{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--bad-soft);color:var(--bad)}
+#banner.ok .ico{background:var(--ok-soft);color:var(--ok)}
+#banner .ico svg{width:22px;height:22px}
+#banner .k{font-size:11.5px;color:var(--muted)}
+#banner .big{font-size:26px;font-weight:600;letter-spacing:-.3px;margin:1px 0 3px}
+#banner .sub{color:var(--muted)}
+#banner .sub b{color:var(--text);font-weight:500}
+@keyframes rise{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+
 /* matrix */
-.matrix{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:14px;overflow:auto}
-.col h3{margin:0 0 8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--line);padding-bottom:6px}
-.col h3 small{display:block;color:var(--dim);text-transform:none;letter-spacing:0;font-weight:400;margin-top:2px}
-.tech{border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin-bottom:8px;background:var(--panel2);color:var(--dim)}
-.tech b{display:block;color:var(--muted);font-size:12px}
-.tech small{font-size:10.5px}
-.tech.lit{border-color:var(--bad);background:#2a0f19;color:#ffc2cd;box-shadow:0 0 12px rgba(255,77,109,.25)}
-.tech.lit b{color:#fff}
-.tech .cnt{float:right;font-size:10px;color:var(--muted)}
-.note{color:var(--dim);font-size:11px;padding:0 14px 12px}
+.matrix{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.col h3{margin:0 0 8px;font-size:12px;font-weight:600;padding-bottom:6px;border-bottom:1px solid var(--line2)}
+.col h3 small{display:block;color:var(--dim);font-weight:400;font-size:11px;margin-top:1px}
+.tech{border:1px solid var(--line);border-left:3px solid var(--line2);border-radius:6px;padding:8px 10px;margin-bottom:8px;background:var(--raise)}
+.tech b{display:block;font-weight:500;color:var(--muted);font-size:12.5px}
+.tech small{font-size:11px;color:var(--dim)}
+.tech .cnt{float:right;font-size:11px;color:var(--dim)}
+.tech.lit{border-left-color:var(--bad);background:var(--bad-soft)}
+.tech.lit b{color:var(--text)}
+
 /* timeline + response */
-.pad{padding:14px;overflow:auto}
-.tl{border-left:2px solid var(--line);margin-left:8px;padding-left:16px}
+.tl{border-left:1px solid var(--line2);margin-left:6px;padding-left:18px}
 .tl .ev{position:relative;margin-bottom:14px}
-.tl .ev:before{content:"";position:absolute;left:-23px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--panel2);border:2px solid var(--muted)}
-.tl .ev.in:before{border-color:var(--sus)}.tl .ev.out:before{border-color:var(--bad)}.tl .ev.det:before{border-color:var(--accent);background:var(--accent)}
-.tl .ev .time{color:var(--muted);font-family:Menlo,monospace;font-size:11px}
-.resp{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.box{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--panel2)}
-.box h4{margin:0 0 8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
-.empty{color:var(--dim);padding:24px;text-align:center}
-#toast{position:fixed;left:50%;top:116px;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--accent);padding:8px 16px;border-radius:999px;display:none;z-index:9}
+.tl .ev:before{content:"";position:absolute;left:-22.5px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--panel);border:1.5px solid var(--muted)}
+.tl .ev.in:before{border-color:var(--warn)}.tl .ev.out:before{border-color:var(--bad)}.tl .ev.det:before{border-color:var(--accent);background:var(--accent)}
+.tl .time{color:var(--dim);font-family:var(--mono);font-size:11px}
+.tl b{font-weight:500}
+.resp{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(0,1fr);gap:12px}
+.box{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--raise);min-width:0}
+.box h4{margin:0 0 8px;font-size:12.5px;font-weight:600}
+.box p{margin:0 0 10px;color:var(--muted)}
+.box .kv{margin-bottom:8px}.box .kv span{display:block;color:var(--dim);font-size:11.5px}.box .kv .addr{word-break:break-all;color:var(--text)}
+.box table th,.box table td{background:none;padding:6px 8px 6px 0}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--raise);border:1px solid var(--line2);padding:8px 14px;border-radius:6px;display:none;z-index:9;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
+<svg style="display:none">
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5 5 6v5.5c0 4.2 2.9 7.6 7 9 4.1-1.4 7-4.8 7-9V6l-7-2.5Z"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h9"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><path d="M7 11V8a5 5 0 0 1 10 0v3M5.5 11h13v9h-13z"/></symbol>
+</svg>
+
 <header class="top">
-  <div class="logo">RG</div>
-  <div class="brand"><b>Ransomwhere-Gains</b><span>Wallet EDR Console</span></div>
-  <div class="scope">Site: <b>Monad Testnet</b> · chain 10143</div>
+  <div class="mark">RG</div>
+  <div class="crumb">Ransomwhere-Gains<span>/</span><em id="crumbView">Threats</em></div>
   <div class="right">
-    <span class="pill">Time to verdict <b id="mttv">—</b></span>
-    <span class="pill"><span class="dot" id="agentDot"></span>Detection agent <b id="agentTxt">stopped</b></span>
+    <span class="chip">Network <b>Monad Testnet</b></span>
+    <span class="chip"><span class="dot" id="agentDot"></span>Detection agent <b id="agentTxt">stopped</b></span>
   </div>
 </header>
 
-<nav class="side">
-  <div class="nav on" data-go="threats"><i>🛡️</i>Threats</div>
-  <div class="nav" data-go="trail"><i>🧬</i>Trail</div>
-  <div class="nav" data-go="matrix"><i>▦</i>Matrix</div>
-  <div class="nav" data-go="activity"><i>📡</i>Activity</div>
-  <div class="nav" data-go="response"><i>🔒</i>Response</div>
+<nav class="rail">
+  <div class="nav on" data-view="threats"><svg class="i"><use href="#i-shield"/></svg>Threats</div>
+  <div class="nav" data-view="activity"><svg class="i"><use href="#i-list"/></svg>Activity</div>
 </nav>
 
 <div class="sim">
-  <span class="lbl">ATTACK SIMULATION</span>
-  <div class="step" id="s0"><span class="n">0</span><button data-run="setup" title="Fresh wallets only if the current ones were used">Reset</button></div><span class="arrow">›</span>
-  <div class="step" id="s1"><span class="n">1</span><button data-agent="start">Start agent</button><button data-agent="stop">Stop</button></div><span class="arrow">›</span>
-  <div class="step" id="s2"><span class="n">2</span><button class="go" data-run="clean">Clean deposit</button></div><span class="arrow">›</span>
-  <div class="step" id="s3"><span class="n">3</span><button class="go" data-run="incident">Run ransomware incident</button></div><span class="arrow">›</span>
-  <div class="step" id="s4"><span class="n">4</span><button class="go" data-run="cashout">Attacker cashes out</button></div>
+  <span class="lbl"><b>Simulation</b> · staged incident on testnet</span>
+  <div class="step" id="s0"><span class="n"><span>1</span><svg class="i"><use href="#i-check"/></svg></span><button class="act" data-run="setup" title="Creates fresh wallets only if the current ones were already used">Reset wallets</button></div><i class="sep"></i>
+  <div class="step" id="s1"><span class="n"><span>2</span><svg class="i"><use href="#i-check"/></svg></span><button class="act" data-agent="start">Start agent</button><button data-agent="stop">Stop</button></div><i class="sep"></i>
+  <div class="step" id="s2"><span class="n"><span>3</span><svg class="i"><use href="#i-check"/></svg></span><button class="act" data-run="clean">Clean deposit</button></div><i class="sep"></i>
+  <div class="step" id="s3"><span class="n"><span>4</span><svg class="i"><use href="#i-check"/></svg></span><button class="act" data-run="incident">Run incident</button></div><i class="sep"></i>
+  <div class="step" id="s4"><span class="n"><span>5</span><svg class="i"><use href="#i-check"/></svg></span><button class="act" data-run="cashout">Attempt cash-out</button></div>
+  <span class="busy" id="busy"><i class="spin"></i><span id="busyTxt"></span></span>
 </div>
 
-<main>
+<main id="main">
   <section class="kpis">
-    <div class="kpi"><div class="t">Wallets monitored</div><div class="v" id="kWallets">—</div></div>
-    <div class="kpi bad"><div class="t">Active threats</div><div class="v" id="kThreats">0</div></div>
-    <div class="kpi gold"><div class="t">Funds held</div><div class="v" id="kHeld">0 dUSD</div></div>
-    <div class="kpi"><div class="t">Time to verdict</div><div class="v" id="kTtv">—</div></div>
-    <div class="kpi good"><div class="t">Clean deposits credited</div><div class="v" id="kClean">0</div></div>
+    <div class="kpi"><div class="t">Wallets monitored</div><div class="v" id="kWallets">–</div></div>
+    <div class="kpi" id="kThreatsBox"><div class="t">Active threats</div><div class="v" id="kThreats">0</div></div>
+    <div class="kpi"><div class="t">Funds held at exchange</div><div class="v" id="kHeld">0<small>dUSD</small></div></div>
+    <div class="kpi"><div class="t">Time to verdict</div><div class="v" id="kTtv">–</div></div>
+    <div class="kpi"><div class="t">Clean deposits credited</div><div class="v" id="kClean">0</div></div>
   </section>
 
   <div class="leftcol">
     <section class="card" id="threatsCard">
-      <h2>Threats <span class="count" id="threatCount">0</span><span style="margin-left:auto;text-transform:none;letter-spacing:0;font-size:11px;cursor:pointer;color:var(--blue)" id="toggleOld"></span></h2>
-      <div class="scroll"><table><thead><tr><th></th><th>Wallet</th><th>Confidence</th><th>Classification</th><th>Mitigation</th></tr></thead><tbody id="threats"></tbody></table>
-        <div class="empty" id="noThreats">No active threats. Run the simulation to stage a ransomware incident.</div></div>
+      <h2>Threats <span class="count" id="threatCount"></span><span class="link" id="toggleOld"></span></h2>
+      <div class="scroll">
+        <table><thead><tr><th>Wallet</th><th>Verdict</th><th>Classification</th><th>Status</th></tr></thead><tbody id="threats"></tbody></table>
+        <div class="empty" id="noThreats">No active threats in the current trail.</div>
+      </div>
     </section>
     <section class="card" id="activityCard">
-      <h2>Activity · live</h2>
+      <h2>Activity</h2>
       <div class="scroll" id="feed"></div>
     </section>
   </div>
 
   <section class="card" id="detail">
-    <div class="detail-head">
+    <div class="dhead">
       <div>
-        <div class="w" id="dTitle">Select a threat</div>
-        <div class="meta" id="dMeta"><span>Click a wallet in the Threats list or the Money Trail</span></div>
+        <div class="w" id="dTitle">Money trail</div>
+        <div class="meta" id="dMeta"></div>
       </div>
-      <div id="dConf"></div>
+      <div class="end" id="dTag"></div>
     </div>
     <div class="tabs">
-      <div class="tab on" data-tab="trail">🧬 Money Trail</div>
-      <div class="tab" data-tab="matrix">▦ Laundering Matrix</div>
-      <div class="tab" data-tab="timeline">⏱ Timeline</div>
-      <div class="tab" data-tab="response">🔒 Response</div>
+      <div class="tab on" data-tab="trail">Money trail</div>
+      <div class="tab" data-tab="matrix">Laundering matrix</div>
+      <div class="tab" data-tab="timeline">Timeline</div>
+      <div class="tab" data-tab="response">Response</div>
     </div>
 
     <div class="pane on" id="p-trail">
-      <div class="trailbar"><span>Trail <b id="trailId">—</b></span><span>Root <b id="trailRoot">—</b></span><span>Wallets in trail <b id="trailN">0</b></span><span>Flagged <b id="trailF" style="color:var(--bad)">0</b></span></div>
-      <div style="flex:1;min-height:0;position:relative">
-        <svg id="graph" viewBox="20 10 1080 590" preserveAspectRatio="xMidYMid meet"></svg>
-        <div id="banner"><div class="card2"><div class="lock" id="bIcon">🔒</div><div class="k" id="bK">THREAT MITIGATED</div><div class="big" id="bBig">FUNDS HELD</div><div class="sub" id="bSub"></div></div></div>
-        <div class="legend"><span><i style="background:#3a4566"></i>unknown</span><span><i style="background:var(--clean)"></i>clean</span><span><i style="background:var(--sus)"></i>suspicious</span><span><i style="background:var(--bad)"></i>malicious</span></div>
-      </div>
+      <svg id="graph" viewBox="20 20 1080 580" preserveAspectRatio="xMidYMid meet"></svg>
+      <div id="banner"><div class="b"><div class="ico" id="bIcon"></div><div><div class="k" id="bK"></div><div class="big" id="bBig"></div><div class="sub" id="bSub"></div></div></div></div>
+      <div class="legend"><span><i style="border-color:#3b3f4e"></i>Not flagged</span><span><i style="border-color:var(--ok)"></i>Clean</span><span><i style="border-color:var(--warn)"></i>Suspicious</span><span><i style="border-color:var(--bad)"></i>Malicious</span></div>
     </div>
 
-    <div class="pane" id="p-matrix">
+    <div class="pane" id="p-matrix"><div class="pad">
       <div class="matrix" id="matrix"></div>
-      <div class="note">Lit cells fired for the selected wallet; the number is how many wallets in this trail matched it. Indicator tags reference FATF (2020, 2023) and FinCEN (2021) ransomware red flags; exact indicator mapping is being confirmed.</div>
-    </div>
-
-    <div class="pane" id="p-timeline"><div class="pad" id="timeline"><div class="empty">Select a flagged wallet to see its timeline.</div></div></div>
-
-    <div class="pane" id="p-response"><div class="pad" id="response"><div class="empty">Select a flagged wallet to see response actions.</div></div></div>
+      <p class="note" style="margin:6px 0 0">Highlighted cells matched for the selected wallet. Counts are wallets in this trail. Behaviors reference FATF (2020, 2023) and FinCEN (2021) ransomware red flags; the exact indicator mapping is still being confirmed.</p>
+    </div></div>
+    <div class="pane" id="p-timeline"><div class="pad" id="timeline"></div></div>
+    <div class="pane" id="p-response"><div class="pad" id="response"></div></div>
   </section>
 </main>
 <div id="toast"></div>
@@ -234,200 +279,220 @@ svg{width:100%;height:100%}
 <script>
 const $ = (s) => document.querySelector(s);
 const SVGNS = "http://www.w3.org/2000/svg";
+const ICON = {
+  wallet: "M3 7.5A2.5 2.5 0 0 1 5.5 5H18a1 1 0 0 1 1 1v2M3 7.5v9A2.5 2.5 0 0 0 5.5 19H20a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1H5.5A2.5 2.5 0 0 1 3 7.5ZM16.5 13.5h.01",
+  user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20a7.5 7.5 0 0 1 15 0",
+  bank: "M3 9.5 12 4l9 5.5M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3.5 20h17",
+  alert: "M12 4 2.8 19.5h18.4L12 4ZM12 10v4.5M12 17.2h.01",
+};
 const NODES = {
-  funder:{x:80,y:500,label:"Onramp",icon:"🏦"}, victim:{x:170,y:300,label:"Victim",icon:"🧑‍💼"}, ransom:{x:340,y:300,label:"Ransom",icon:"💀"},
-  hop1:{x:520,y:90,label:"Hop 1",icon:"👛"}, hop2:{x:520,y:220,label:"Hop 2",icon:"👛"}, hop3:{x:520,y:350,label:"Hop 3",icon:"👛"}, hop4:{x:520,y:480,label:"Hop 4",icon:"👛"},
-  merge:{x:700,y:300,label:"Merge",icon:"🧲"}, cashout:{x:860,y:300,label:"Cash-out",icon:"🏃"}, exchange:{x:1010,y:410,label:"Exchange",icon:"🏛️"}, clean:{x:860,y:520,label:"Clean user",icon:"🙂"},
+  funder:{x:90,y:500,label:"Onramp",icon:"bank"}, victim:{x:180,y:300,label:"Victim",icon:"user"}, ransom:{x:350,y:300,label:"Ransom wallet",icon:"alert"},
+  hop1:{x:530,y:100,label:"Hop 1",icon:"wallet"}, hop2:{x:530,y:233,label:"Hop 2",icon:"wallet"}, hop3:{x:530,y:366,label:"Hop 3",icon:"wallet"}, hop4:{x:530,y:500,label:"Hop 4",icon:"wallet"},
+  merge:{x:710,y:300,label:"Merge wallet",icon:"wallet"}, cashout:{x:870,y:300,label:"Cash-out wallet",icon:"wallet"}, exchange:{x:1010,y:420,label:"Exchange",icon:"bank"}, clean:{x:870,y:520,label:"Clean user",icon:"user"},
 };
 const TRAIL = ["victim","ransom","hop1","hop2","hop3","hop4","merge","cashout"];
 const EDGES = [["funder","victim"],["funder","clean"],["victim","ransom"],["ransom","hop1"],["ransom","hop2"],["ransom","hop3"],["ransom","hop4"],["hop1","merge"],["hop2","merge"],["hop3","merge"],["hop4","merge"],["merge","cashout"],["cashout","exchange"],["clean","exchange"]];
-const VNAME = ["CLEAN","SUSPICIOUS","MALICIOUS"];
+const VNAME = ["Clean","Suspicious","Malicious"];
 const BIT = { RAPID_PASS_THROUGH:1, NEW_WALLET_CHAIN:2, SPLIT_AND_MERGE:4, MANY_TO_ONE:8, TAINTED_BY_FLAGGED:16, RANSOM_NOTE_EVIDENCE:32 };
-// Laundering matrix: AML stages as columns (the way an ATT&CK matrix uses tactics)
 const MATRIX = [
-  { stage:"Evidence", sub:"what ties it to ransomware", techs:[{k:"RANSOM_NOTE_EVIDENCE",t:"Named in a ransom note",s:"Offchain evidence, fingerprint onchain"}] },
-  { stage:"Placement", sub:"money enters the scheme", techs:[{k:"MANY_TO_ONE",t:"Many-to-one collection",s:"FinCEN 2021 advisory"}] },
-  { stage:"Layering", sub:"hide the trail", techs:[{k:"RAPID_PASS_THROUGH",t:"Rapid pass-through",s:"FATF 2023 / 2020"},{k:"NEW_WALLET_CHAIN",t:"New-wallet chain",s:"FATF 2020 VA red flags"},{k:"SPLIT_AND_MERGE",t:"Split and merge",s:"FATF 2023"}] },
-  { stage:"Propagation", sub:"risk follows the money", techs:[{k:"TAINTED_BY_FLAGGED",t:"Funds from a malicious wallet",s:"Downstream taint (pilot rule)"}] },
-  { stage:"Integration", sub:"cash out", techs:[{k:"CASHOUT",t:"Deposit at an exchange",s:"Where the hold happens"}] },
+  { stage:"Evidence", sub:"Ties the wallet to ransomware", techs:[{k:"RANSOM_NOTE_EVIDENCE",t:"Named in a ransom note",s:"Off-chain evidence, fingerprint on-chain"}] },
+  { stage:"Placement", sub:"Money enters the scheme", techs:[{k:"MANY_TO_ONE",t:"Many-to-one collection",s:"FinCEN 2021"}] },
+  { stage:"Layering", sub:"Hiding the trail", techs:[{k:"RAPID_PASS_THROUGH",t:"Rapid pass-through",s:"FATF 2023, 2020"},{k:"NEW_WALLET_CHAIN",t:"New-wallet chain",s:"FATF 2020"},{k:"SPLIT_AND_MERGE",t:"Split and merge",s:"FATF 2023"}] },
+  { stage:"Propagation", sub:"Risk follows the money", techs:[{k:"TAINTED_BY_FLAGGED",t:"Funds from a malicious wallet",s:"Downstream taint (pilot rule)"}] },
+  { stage:"Integration", sub:"Cashing out", techs:[{k:"CASHOUT",t:"Deposit at an exchange",s:"Where the hold happens"}] },
 ];
-let state = null, addrToRole = {}, prevVerdict = {}, seenDeposits = null, explorer = "https://testnet.monadexplorer.com";
-let selected = null, oldReports = [], showOld = false, armedRelease = null;
-const short = (a) => a ? a.slice(0,6) + "…" + a.slice(-4) : "";
-const dusd = (s) => s == null ? "" : (Number(BigInt(s) / 10n ** 14n) / 10000).toLocaleString("en-US") + " dUSD";
-const label = (role) => NODES[role] ? NODES[role].label : role;
+const STAGE_TEXT = { setup:"Preparing wallets", clean:"Depositing", incident:"Incident running", cashout:"Cash-out running", release:"Releasing deposit" };
 
-// ---------- Money Trail graph ----------
+let state = null, addrToRole = {}, prevVerdict = {}, seenDeposits = null, explorer = "https://testnet.monadexplorer.com";
+let selected = null, selectedAddr = null, manual = false, oldReports = [], showOld = false, armedRelease = null, detailToken = 0, detailKey = "";
+const liveUntil = {};
+const short = (a) => a ? a.slice(0,6) + "…" + a.slice(-4) : "";
+const num = (s) => (Number(BigInt(s) / 10n ** 14n) / 10000).toLocaleString("en-US");
+const dusd = (s) => s == null ? "" : num(s) + " dUSD";
+const label = (role) => NODES[role] ? NODES[role].label : role;
+const esc = (s) => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const icon = (id) => `<svg class="i"><use href="#i-${id}"/></svg>`;
+const nodesOf = () => (state && state.nodes) || {};
+const deposits = () => (state && state.deposits) || [];
+const who = (addr) => { const r = addrToRole[addr.toLowerCase()]; return r ? label(r) : short(addr); };
+
+// ---------- trail graph ----------
 const g = $("#graph");
 function el(tag, attrs, parent = g) { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; }
 const edgeEls = {};
 for (const [a,b] of EDGES) edgeEls[a+">"+b] = el("line", { class:"edge", x1:NODES[a].x, y1:NODES[a].y, x2:NODES[b].x, y2:NODES[b].y });
-const reg = el("g", { class:"registry", transform:"translate(880,40)" });
-el("rect", { x:-130, y:0, width:260, height:56, rx:10 }, reg);
-el("text", { x:0, y:23 }, reg).textContent = "⛓  Verdict registry · Monad";
-const regSub = el("text", { x:0, y:43, style:"fill:#8b95ad;font-size:11px" }, reg); regSub.textContent = "waiting for verdicts";
+const reg = el("g", { class:"reg", transform:"translate(770,40)" });
+el("rect", { x:0, y:0, width:300, height:54, rx:6 }, reg);
+el("text", { x:14, y:23 }, reg).textContent = "Verdict registry";
+const regSub = el("text", { class:"s", x:14, y:41 }, reg);
 const nodeEls = {};
 for (const [role, n] of Object.entries(NODES)) {
   const grp = el("g", { class:"node", transform:`translate(${n.x},${n.y})` });
-  const inner = el("g", {}, grp);
-  el("circle", { class:"selring", r:44 }, inner);
-  el("circle", { class:"body", r:33 }, inner);
-  el("text", { class:"icon", y:8 }, inner).textContent = n.icon;
-  el("text", { y:51 }, inner).textContent = n.label;
-  const sub = el("text", { class:"sub", y:65 }, inner);
-  const flag = el("text", { class:"flag", y:-42, "text-anchor":"middle" }, inner);
-  grp.addEventListener("click", () => select(role));
+  el("circle", { class:"ring", r:38 }, grp);
+  el("circle", { class:"body", r:30 }, grp);
+  el("path", { class:"ic", d:ICON[n.icon], transform:"translate(-12,-12)" }, grp);
+  el("text", { y:50 }, grp).textContent = n.label;
+  const sub = el("text", { class:"sub", y:65 }, grp);
+  const flag = el("text", { class:"flag", y:-40 }, grp);
+  grp.addEventListener("click", () => select(role, true));
   nodeEls[role] = { grp, sub, flag };
 }
+function restart(elm, cls) { elm.classList.remove(cls); void elm.getBBox(); elm.classList.add(cls); }
 function animateCoin(fromRole, toRole, amount) {
   const a = NODES[fromRole], b = NODES[toRole]; if (!a || !b) return;
-  const coin = el("circle", { class:"coin", r:9, cx:a.x, cy:a.y });
-  const lab = el("text", { class:"coinlabel", x:a.x, y:a.y-14 }); lab.textContent = amount;
+  const coin = el("circle", { class:"coin", r:5, cx:a.x, cy:a.y });
+  const lab = el("text", { class:"coinlabel", x:a.x, y:a.y-11 }); lab.textContent = amount;
   const t0 = performance.now(), dur = 900;
   (function step(t) {
     const p = Math.min(1, (t - t0) / dur), e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2) / 2;
     const x = a.x + (b.x - a.x) * e, y = a.y + (b.y - a.y) * e;
-    coin.setAttribute("cx", x); coin.setAttribute("cy", y); lab.setAttribute("x", x); lab.setAttribute("y", y - 14);
+    coin.setAttribute("cx", x); coin.setAttribute("cy", y); lab.setAttribute("x", x); lab.setAttribute("y", y - 11);
     if (p < 1) requestAnimationFrame(step);
-    else { coin.remove(); lab.remove(); const n = nodeEls[toRole]; if (n) { n.grp.classList.remove("recv"); void n.grp.getBBox(); n.grp.classList.add("recv"); } }
+    else { coin.remove(); lab.remove(); if (nodeEls[toRole]) restart(nodeEls[toRole].grp, "recv"); }
   })(t0);
 }
 
-// ---------- verdict visuals (live from agent output, confirmed by chain polls) ----------
-const liveUntil = {};
+// ---------- verdicts ----------
 function setNodeVerdict(role, v, hasAddress = true) {
   const ne = nodeEls[role]; if (!ne) return;
   ne.grp.classList.remove("v0","v1","v2");
-  if (v === 1 || v === 2) ne.grp.classList.add("v" + v);
-  if (v === 0 && hasAddress && (role === "victim" || role === "clean")) ne.grp.classList.add("v0");
-  ne.flag.textContent = v === 2 ? "MALICIOUS" : v === 1 ? "SUSPICIOUS" : "";
+  if (v >= 1) ne.grp.classList.add("v" + v);
+  else if (hasAddress && (role === "victim" || role === "clean")) ne.grp.classList.add("v0");
+  ne.flag.textContent = "";
   if (prevVerdict[role] !== undefined && prevVerdict[role] !== v && v >= 1) {
-    ne.grp.classList.remove("flash"); void ne.grp.getBBox(); ne.grp.classList.add("flash");
-    reg.classList.remove("blink"); void reg.getBBox(); reg.classList.add("blink");
-    regSub.textContent = `${label(role)} → ${VNAME[v]}`;
+    restart(ne.grp, "flash"); restart(reg, "blink");
+    regSub.textContent = `${label(role)}: ${VNAME[v].toLowerCase()}`;
   }
   prevVerdict[role] = v;
-  for (const [k, e] of Object.entries(edgeEls)) { const from = k.split(">")[0]; e.classList.toggle("hot", prevVerdict[from] === 2 && from !== "funder"); }
+  for (const [k, e] of Object.entries(edgeEls)) { const from = k.split(">")[0]; e.classList.toggle("hot", prevVerdict[from] === 2); }
 }
+// The agent logs e.g. "MALICIOUS  0x835b…4d55  RAPID_PASS_THROUGH + SPLIT_AND_MERGE": show it immediately; the chain poll confirms.
 function verdictFromAgentLine(line) {
-  const m = line.match(/(MALICIOUS|SUSPICIOUS)\s+0x([0-9a-fA-F]{4})…([0-9a-fA-F]{4})/);
-  if (!m || !state || !state.nodes) return;
+  const m = line.match(/(MALICIOUS|SUSPICIOUS)\s+0x([0-9a-fA-F]{4})…([0-9a-fA-F]{4})\s+(.+)$/);
+  if (!m) return;
   const v = m[1] === "MALICIOUS" ? 2 : 1, pre = ("0x" + m[2]).toLowerCase(), suf = m[3].toLowerCase();
-  for (const [role, n] of Object.entries(state.nodes)) {
+  const bits = m[4].split("+").reduce((s, k) => s | (BIT[k.trim()] || 0), 0);
+  for (const [role, n] of Object.entries(nodesOf())) {
     const a = (n.address || "").toLowerCase();
-    if (a.startsWith(pre) && a.endsWith(suf)) {
-      liveUntil[role] = Date.now() + 15000;
-      const bits = m.input ? line.split(/\s{2,}/).pop().split(" + ").reduce((s, k) => s | (BIT[k.trim()] || 0), 0) : 0;
-      if (bits) n.behaviors = bits;
-      n.verdict = Math.max(n.verdict ?? 0, v);
-      setNodeVerdict(role, v);
-      if (!selected || selected === "auto") autoSelect();
-      renderThreats(); renderKpis(); renderMatrix();
-    }
+    if (!NODES[role] || !a.startsWith(pre) || !a.endsWith(suf)) continue;
+    liveUntil[role] = Date.now() + 15000;
+    n.verdict = Math.max(n.verdict ?? 0, v); if (bits) n.behaviors = bits;
+    setNodeVerdict(role, n.verdict);
+    renderAll();
   }
 }
 
-// ---------- derived views ----------
-const nodesOf = () => (state && state.nodes) || {};
-const deposits = () => (state && state.deposits) || [];
+// ---------- derived ----------
 function depositsOf(role) { const a = (nodesOf()[role] || {}).address; return a ? deposits().filter(d => d.depositor.toLowerCase() === a.toLowerCase()) : []; }
 function classification(role, n) {
-  if (n.behaviors & BIT.RANSOM_NOTE_EVIDENCE) return "Ransom wallet";
+  if ((n.behaviors || 0) & BIT.RANSOM_NOTE_EVIDENCE) return "Ransom wallet";
   if (role === "cashout") return "Cash-out";
   if (role === "merge") return "Consolidation";
   if (role.startsWith("hop")) return "Layering";
   return "Laundering";
 }
-function mitigation(role) {
+function status(role) {
   const ds = depositsOf(role);
-  if (ds.some(d => d.status === 1)) return ["held", "🔒 Held"];
-  if (ds.some(d => d.status === 2)) return ["rel", "Released"];
-  return ["mon", "Watching"];
+  if (ds.some(d => d.status === 1)) return `<span class="st held">${icon("lock")}Funds held</span>`;
+  if (ds.some(d => d.status === 2)) return `<span class="st rel">Released</span>`;
+  return `<span class="st">Monitoring</span>`;
 }
-function threatRoles() { return Object.entries(nodesOf()).filter(([r, n]) => NODES[r] && n.verdict >= 1).map(([r]) => r).sort((a, b) => TRAIL.indexOf(b) - TRAIL.indexOf(a)); }
+const threatRoles = () => TRAIL.filter(r => nodesOf()[r] && (nodesOf()[r].verdict ?? 0) >= 1).reverse();
+const tag = (v) => `<span class="tag ${v === 2 ? "m" : v === 1 ? "s" : "c"}">${VNAME[v]}</span>`;
 
 function renderThreats() {
-  const roles = threatRoles(), cur = new Set(roles.map(r => nodesOf()[r].address.toLowerCase()));
-  const rows = roles.map(r => {
-    const n = nodesOf()[r], c = n.verdict === 2 ? "m" : "s", [mc, mt] = mitigation(r);
-    return `<tr class="row ${selected === r ? "sel" : ""}" data-role="${r}"><td><span class="sev ${c}"></span></td><td><b>${label(r)}</b> <span class="addr">${short(n.address)}</span></td><td><span class="conf ${c}">${VNAME[n.verdict]}</span></td><td>${classification(r, n)}</td><td class="mit ${mc}">${mt}</td></tr>`;
-  });
+  const roles = threatRoles(), cur = new Set(Object.values(nodesOf()).map(n => (n.address || "").toLowerCase()));
+  const rows = roles.map(r => { const n = nodesOf()[r];
+    return `<tr class="row ${selected === r ? "sel" : ""}" data-role="${r}"><td>${label(r)}<span class="addr">${short(n.address)}</span></td><td>${tag(n.verdict)}</td><td>${classification(r, n)}</td><td>${status(r)}</td></tr>`; });
   const olds = oldReports.filter(o => !cur.has(o.wallet.toLowerCase()));
-  if (showOld) for (const o of olds.slice(0, 40)) rows.push(`<tr class="old"><td><span class="sev ${o.verdict === "MALICIOUS" ? "m" : "s"}"></span></td><td>Earlier run<div class="addr">${short(o.wallet)}</div></td><td><span class="conf ${o.verdict === "MALICIOUS" ? "m" : "s"}">${o.verdict}</span></td><td>${o.evidence ? "Ransom wallet" : "Laundering"}</td><td class="mit mon">Archived</td></tr>`);
+  if (showOld) for (const o of olds.slice(0, 60)) rows.push(`<tr class="old"><td>Earlier run<span class="addr">${short(o.wallet)}</span></td><td>${o.verdict === "MALICIOUS" ? "Malicious" : "Suspicious"}</td><td>${o.evidence ? "Ransom wallet" : "Laundering"}</td><td>Archived</td></tr>`);
   $("#threats").innerHTML = rows.join("");
-  $("#noThreats").style.display = roles.length ? "none" : "block";
-  $("#threatCount").textContent = roles.length;
-  $("#toggleOld").textContent = olds.length ? (showOld ? "hide earlier runs" : `show earlier runs (${olds.length})`) : "";
-  document.querySelectorAll("tr.row").forEach(tr => tr.addEventListener("click", () => select(tr.dataset.role)));
+  $("#noThreats").style.display = rows.length ? "none" : "block";
+  $("#threatCount").textContent = roles.length ? roles.length : "";
+  $("#toggleOld").textContent = olds.length ? (showOld ? "Hide earlier runs" : `Earlier runs (${olds.length})`) : "";
+  document.querySelectorAll("tr.row").forEach(tr => tr.addEventListener("click", () => select(tr.dataset.role, true)));
 }
 function renderKpis() {
   const ns = Object.entries(nodesOf()).filter(([r, n]) => NODES[r] && r !== "exchange" && n.address);
-  $("#kWallets").textContent = ns.length;
-  $("#kThreats").textContent = threatRoles().length;
-  const held = deposits().filter(d => d.status === 1).reduce((s, d) => s + BigInt(d.amount), 0n);
-  $("#kHeld").textContent = dusd(held.toString());
-  $("#kClean").textContent = deposits().filter(d => d.status === 0).length;
-  const t = Object.values(nodesOf());
-  const inTrail = TRAIL.filter(r => nodesOf()[r] && nodesOf()[r].address);
-  $("#trailN").textContent = inTrail.length; $("#trailF").textContent = inTrail.filter(r => (nodesOf()[r].verdict ?? 0) >= 1).length;
-  const ransom = nodesOf().ransom;
-  $("#trailId").textContent = ransom && ransom.address ? "RT-" + ransom.address.slice(2, 8).toUpperCase() : "—";
-  $("#trailRoot").textContent = ransom && ransom.address ? `Ransom ${short(ransom.address)}` : "—";
+  const threats = threatRoles().length;
+  $("#kWallets").textContent = ns.length || "–";
+  $("#kThreats").textContent = threats;
+  $("#kThreatsBox").classList.toggle("alert", threats > 0);
+  // KPIs describe the current trail only; deposits from earlier runs are not counted
+  const mine = deposits().filter(d => addrToRole[d.depositor.toLowerCase()]);
+  const held = mine.filter(d => d.status === 1).reduce((s, d) => s + BigInt(d.amount), 0n);
+  $("#kHeld").innerHTML = `${num(held.toString())}<small>dUSD</small>`;
+  $("#kClean").textContent = mine.filter(d => d.status === 0).length;
 }
 function renderMatrix() {
-  const n = selected && nodesOf()[selected] ? nodesOf()[selected] : null;
   const roles = TRAIL.filter(r => nodesOf()[r]);
   const has = (role, k) => k === "CASHOUT" ? depositsOf(role).length > 0 && (nodesOf()[role].verdict ?? 0) >= 1 : ((nodesOf()[role].behaviors || 0) & BIT[k]) !== 0;
   $("#matrix").innerHTML = MATRIX.map(col => `<div class="col"><h3>${col.stage}<small>${col.sub}</small></h3>${col.techs.map(tc => {
-    const lit = n && selected && has(selected, tc.k), cnt = roles.filter(r => has(r, tc.k)).length;
-    return `<div class="tech ${lit ? "lit" : ""}"><span class="cnt">${cnt ? cnt + " wallet" + (cnt > 1 ? "s" : "") : ""}</span><b>${tc.t}</b><small>${tc.s}</small></div>`;
+    const lit = selected && nodesOf()[selected] && has(selected, tc.k), cnt = roles.filter(r => has(r, tc.k)).length;
+    return `<div class="tech ${lit ? "lit" : ""}"><span class="cnt">${cnt || ""}</span><b>${tc.t}</b><small>${tc.s}</small></div>`;
   }).join("")}</div>`).join("");
 }
 
 // ---------- selection + detail ----------
-function autoSelect() {
-  const roles = threatRoles();
-  if (roles.length) { selected = roles[0]; renderDetail(); }
+function select(role, byUser) {
+  if (!NODES[role] || role === "exchange" || role === "funder" || !nodesOf()[role]) return;
+  selected = role; selectedAddr = nodesOf()[role].address; manual = !!byUser; armedRelease = null; detailKey = "";
+  renderAll();
 }
-async function select(role) {
-  if (!NODES[role] || role === "exchange" || role === "funder") return;
-  selected = role; armedRelease = null; renderDetail();
+function trailSummary() {
+  const r = nodesOf().ransom, inTrail = TRAIL.filter(x => nodesOf()[x] && nodesOf()[x].address);
+  const id = r && r.address ? "RT-" + r.address.slice(2, 8).toUpperCase() : "–";
+  return { id, n: inTrail.length, flagged: inTrail.filter(x => (nodesOf()[x].verdict ?? 0) >= 1).length, root: r && r.address ? short(r.address) : "–" };
 }
-let reportCache = {};
 async function renderDetail() {
   for (const [r, ne] of Object.entries(nodeEls)) ne.grp.classList.toggle("sel", r === selected);
-  document.querySelectorAll("tr.row").forEach(tr => tr.classList.toggle("sel", tr.dataset.role === selected));
-  const n = nodesOf()[selected];
-  if (!n) return;
-  const v = n.verdict ?? 0, c = v === 2 ? "m" : v === 1 ? "s" : "c";
-  $("#dTitle").textContent = `${label(selected)} · ${short(n.address)}`;
-  $("#dConf").innerHTML = `<span class="conf ${c}" style="font-size:13px;padding:5px 14px">${VNAME[v]}</span>`;
-  renderMatrix();
+  const t = trailSummary();
+  const trailMeta = `<span>Trail <b>${t.id}</b></span><span>Wallets <b>${t.n}</b></span><span>Flagged <b>${t.flagged}</b></span>`;
+  const n = selected ? nodesOf()[selected] : null;
+  if (!n) {
+    detailKey = ""; detailToken++;
+    $("#dTitle").textContent = "Money trail"; $("#dTag").innerHTML = "";
+    $("#dMeta").innerHTML = trailMeta + `<span>Root <b class="mono">${t.root}</b></span>`;
+    $("#timeline").innerHTML = $("#response").innerHTML = `<div class="empty">Select a wallet to see its details.</div>`;
+    return;
+  }
+  const v = n.verdict ?? 0, key = [selected, n.address, v, n.behaviors, JSON.stringify(depositsOf(selected)), armedRelease, t.flagged].join("|");
+  $("#dTitle").innerHTML = `${label(selected)}<span class="addr">${n.address}</span>`;
+  $("#dTag").innerHTML = tag(v);
+  if (key === detailKey) return;
+  detailKey = key;
+  const token = ++detailToken;
   let rep = null;
-  if (v >= 1) { const r = await fetch("/api/report/" + n.address); if (r.ok) rep = await r.json(); reportCache[selected] = rep; }
-  const [mc, mt] = mitigation(selected);
-  $("#dMeta").innerHTML = v >= 1
-    ? `<span>Classification <b>${classification(selected, n)}</b></span><span>Indicators <b>${rep ? rep.matched.length : "…"}</b></span><span>Detected <b>${rep ? rep.generatedAt.slice(11,19) + " UTC" : "…"}</b></span><span>Status <b class="mit ${mc}">${mt}</b></span>`
-    : `<span>No behaviors matched · ${n.address}</span>`;
-  // timeline
+  if (v >= 1) { try { const r = await fetch("/api/report/" + n.address); if (r.ok) rep = await r.json(); } catch {} }
+  if (token !== detailToken) return;
+  $("#dMeta").innerHTML = trailMeta + (v >= 1
+    ? `<span>Classification <b>${classification(selected, n)}</b></span><span>Indicators <b>${rep ? rep.matched.length : "–"}</b></span>`
+    : `<span>No behaviors matched</span>`);
   if (rep) {
-    const evs = rep.timeline.map(t => ({ time: t.time, cls: t.direction, html: `${t.direction === "in" ? "Received" : "Sent"} <b>${t.amount}</b> ${t.direction === "in" ? "from" : "to"} <b>${addrToRole[t.counterparty.toLowerCase()] ? label(addrToRole[t.counterparty.toLowerCase()]) : short(t.counterparty)}</b> · <a target="_blank" rel="noopener" href="${explorer}/tx/${t.tx}">${t.tx.slice(0,10)}…</a>` }));
-    evs.push({ time: rep.generatedAt, cls: "det", html: `<b style="color:var(--bad)">Verdict ${rep.verdict}</b> posted onchain: ${rep.matched.map(m => m.title).join(", ")}${rep.verdictTx ? ` · <a target="_blank" rel="noopener" href="${explorer}/tx/${rep.verdictTx}">verdict tx</a>` : ""}` });
+    const evs = rep.timeline.map(x => ({ time:x.time, cls:x.direction, html:`${x.direction === "in" ? "Received" : "Sent"} <b>${esc(x.amount)}</b> ${x.direction === "in" ? "from" : "to"} <b>${who(x.counterparty)}</b> · <a target="_blank" rel="noopener" href="${explorer}/tx/${x.tx}" class="mono">${x.tx.slice(0,10)}…</a>` }));
+    evs.push({ time:rep.generatedAt, cls:"det", html:`Verdict <b>${VNAME[v].toLowerCase()}</b> posted on-chain: ${rep.matched.map(m => esc(m.title)).join(", ")}${rep.verdictTx ? ` · <a target="_blank" rel="noopener" href="${explorer}/tx/${rep.verdictTx}">verdict transaction</a>` : ""}` });
     evs.sort((a, b) => a.time < b.time ? -1 : 1);
     $("#timeline").innerHTML = `<div class="tl">${evs.map(e => `<div class="ev ${e.cls}"><div class="time">${e.time.slice(11,19)} UTC</div>${e.html}</div>`).join("")}</div>`;
-  } else $("#timeline").innerHTML = `<div class="empty">${label(selected)} has no threat report (not flagged).</div>`;
-  renderResponse(rep);
+  } else $("#timeline").innerHTML = `<div class="empty">${v >= 1 ? "The threat report is being written." : label(selected) + " is not flagged, so it has no threat report."}</div>`;
+  if (v >= 1 && !rep) detailKey = ""; // retry on the next state update
+  renderResponse(rep, n);
 }
-function renderResponse(rep) {
+function renderResponse(rep, n) {
   const ds = depositsOf(selected);
-  const depRows = ds.length ? `<table><tr><th>#</th><th>Amount</th><th>Verdict at deposit</th><th>Status</th><th></th></tr>${ds.map(d => `<tr><td>${d.id}</td><td>${dusd(d.amount)}</td><td>${VNAME[d.verdict]}</td><td class="mit ${["mon","held","rel"][d.status]}">${["Credited","🔒 Held","Released"][d.status]}</td><td>${d.status === 1 ? (armedRelease === d.id ? `<button class="danger" data-release="${d.id}">Confirm release</button>` : `<button data-arm="${d.id}">Release funds…</button>`) : ""}</td></tr>`).join("")}</table>` : `<div class="empty" style="padding:10px">No deposits from this wallet.</div>`;
+  const depRows = ds.length ? `<table><thead><tr><th>Deposit</th><th>Amount</th><th>Verdict at deposit</th><th>Status</th><th></th></tr></thead><tbody>${ds.map(d => `<tr><td>#${d.id}</td><td>${dusd(d.amount)}</td><td>${VNAME[d.verdict]}</td><td>${["Credited","Held","Released"][d.status]}</td><td>${d.status === 1 ? (armedRelease === d.id ? `<button class="danger" data-release="${d.id}">Confirm release</button> <button data-cancel>Cancel</button>` : `<button data-arm="${d.id}">Release funds</button>`) : ""}</td></tr>`).join("")}</tbody></table>` : `<p style="margin:0">No deposits from this wallet.</p>`;
   $("#response").innerHTML = `<div class="resp">
-    <div class="box"><h4>Containment</h4><p style="margin:0 0 10px;color:var(--muted)">Any contract that reads the registry can act on this verdict. The demo exchange <b style="color:var(--text)">holds</b> deposits from non-clean wallets automatically, without blocking them.</p>${depRows}</div>
-    <div class="box"><h4>Evidence</h4>${rep ? `<p style="margin:0 0 6px">Report hash (onchain)<br><span class="addr">${rep.reportHash}</span></p><p style="margin:0 0 6px">Ransom-note fingerprint<br><span class="addr">${rep.evidenceHash || "none"}</span></p>${rep.verdictTx ? `<p style="margin:0"><a target="_blank" rel="noopener" href="${explorer}/tx/${rep.verdictTx}">View verdict transaction ↗</a></p>` : ""}` : `<span class="addr">no report</span>`}
-    <p style="margin:10px 0 0"><a target="_blank" rel="noopener" href="${explorer}/address/${(nodesOf()[selected] || {}).address}">Wallet on explorer ↗</a></p></div></div>
-    <p class="note" style="padding:12px 0 0">Release = a reviewer clears a false positive: the exchange owner calls <code>release()</code> onchain and the funds become withdrawable.</p>`;
-  document.querySelectorAll("[data-arm]").forEach(b => b.addEventListener("click", () => { armedRelease = Number(b.dataset.arm); renderResponse(rep); }));
-  document.querySelectorAll("[data-release]").forEach(b => b.addEventListener("click", () => { armedRelease = null; post("/api/release/" + b.dataset.release); toast("Releasing deposit " + b.dataset.release + "…"); }));
+    <div class="box"><h4>Containment</h4><p>The exchange reads the registry on every deposit and holds funds from wallets that are not clean. Held funds are not lost: a reviewer can release them.</p>${depRows}</div>
+    <div class="box"><h4>Evidence</h4>${rep ? `<div class="kv"><span>Report hash (on-chain)</span><div class="addr">${rep.reportHash}</div></div><div class="kv"><span>Ransom-note fingerprint</span><div class="addr">${rep.evidenceHash || "None"}</div></div>${rep.verdictTx ? `<div class="kv"><a target="_blank" rel="noopener" href="${explorer}/tx/${rep.verdictTx}">Verdict transaction</a></div>` : ""}` : `<p>No report for this wallet.</p>`}<div class="kv"><a target="_blank" rel="noopener" href="${explorer}/address/${n.address}">Wallet on explorer</a></div></div>
+  </div>`;
+  document.querySelectorAll("[data-arm]").forEach(b => b.addEventListener("click", () => { armedRelease = Number(b.dataset.arm); renderDetail(); }));
+  document.querySelectorAll("[data-cancel]").forEach(b => b.addEventListener("click", () => { armedRelease = null; renderDetail(); }));
+  document.querySelectorAll("[data-release]").forEach(b => b.addEventListener("click", () => { armedRelease = null; post("/api/release/" + b.dataset.release); }));
+}
+function renderAll() {
+  // selection follows the wallet, not the role: a reset replaces every wallet
+  if (selected && (!nodesOf()[selected] || nodesOf()[selected].address !== selectedAddr)) { selected = null; manual = false; }
+  if (!manual) { const roles = threatRoles(); selected = roles[0] || null; selectedAddr = selected ? nodesOf()[selected].address : null; }
+  renderThreats(); renderKpis(); renderMatrix(); renderDetail();
 }
 
 // ---------- state ----------
@@ -439,69 +504,75 @@ function applyState(s) {
   for (const [r, n] of Object.entries(s.nodes || {})) if (n.address) addrToRole[n.address.toLowerCase()] = r;
   for (const [role, ne] of Object.entries(nodeEls)) {
     const n = (s.nodes || {})[role] || {};
-    ne.sub.textContent = role === "exchange" ? "reads registry on deposit" : (n.address ? short(n.address) + (n.balance && n.balance !== "0" ? " · " + dusd(n.balance) : "") : "");
+    ne.sub.textContent = role === "exchange" ? "checks registry" : (n.address ? short(n.address) : "");
     if (role === "exchange" || role === "funder") continue;
     const prev = prevNodes && prevNodes[role];
-    if (prev && prev.address === n.address && prev.verdict > (n.verdict ?? 0) && liveUntil[role] > Date.now()) { n.verdict = prev.verdict; n.behaviors = prev.behaviors; }
+    if (prev && prev.address !== n.address) delete prevVerdict[role];
+    // keep a verdict the agent announced live until the chain poll catches up
+    if (prev && prev.address === n.address && (prev.verdict ?? 0) > (n.verdict ?? 0) && liveUntil[role] > Date.now()) { n.verdict = prev.verdict; n.behaviors = prev.behaviors; }
     if (n.verdict === null || n.verdict === undefined) continue;
     setNodeVerdict(role, n.verdict, !!n.address);
   }
+  const anyFlagged = TRAIL.some(r => ((s.nodes[r] || {}).verdict ?? 0) >= 1);
+  if (!anyFlagged) regSub.textContent = "No verdicts in this trail yet";
+  else if (!regSub.textContent || /^No verdicts/.test(regSub.textContent)) regSub.textContent = "Verdicts posted on-chain";
   $("#agentDot").classList.toggle("on", !!s.agentRunning);
   $("#agentTxt").textContent = s.agentRunning ? "running" : "stopped";
-  const busy = !!s.stageRunning;
-  document.querySelectorAll("[data-run]").forEach(b => b.disabled = busy);
-  $('[data-agent="start"]').disabled = !!s.agentRunning;
-  $('[data-agent="stop"]').disabled = !s.agentRunning;
+  const busy = s.stageRunning;
+  document.querySelectorAll("[data-run]").forEach(b => b.disabled = !!busy);
+  $('[data-agent="start"]').disabled = !!s.agentRunning || !!busy;
+  $('[data-agent="stop"]').disabled = !s.agentRunning || !!busy;
+  $("#busy").classList.toggle("on", !!busy); $("#busyTxt").textContent = STAGE_TEXT[busy] || "";
   const deps = s.deposits || [];
   if (seenDeposits !== null) for (const d of deps) if (d.id >= seenDeposits) depositEvent(d);
   if (s.depositCount != null) seenDeposits = Math.max(seenDeposits ?? 0, s.depositCount);
-  const has = (r) => s.nodes && s.nodes[r] && s.nodes[r].address;
-  const cleanA = has("clean") && s.nodes.clean.address.toLowerCase(), cashA = has("cashout") && s.nodes.cashout.address.toLowerCase();
-  const steps = { s0: !!has("victim"), s1: !!s.agentRunning, s2: deps.some(d => d.depositor.toLowerCase() === cleanA), s3: (prevVerdict.cashout ?? 0) >= 1, s4: deps.some(d => d.depositor.toLowerCase() === cashA) };
+  const addr = (r) => s.nodes[r] && s.nodes[r].address ? s.nodes[r].address.toLowerCase() : null;
+  const used = anyFlagged || deps.some(d => d.depositor.toLowerCase() === addr("cashout"));
+  // Step 1 is "done" while the wallets are fresh; once a trail has been run, Reset becomes the next step again only after cash-out
+  const steps = { s0: !!addr("victim"), s1: !!s.agentRunning, s2: deps.some(d => d.depositor.toLowerCase() === addr("clean")), s3: anyFlagged, s4: deps.some(d => d.depositor.toLowerCase() === addr("cashout")) };
   let next = null;
   for (const k of ["s0","s1","s2","s3","s4"]) { $("#"+k).classList.toggle("done", !!steps[k]); if (!steps[k] && !next) next = k; }
+  if (!next && used) { next = "s0"; $("#s0").classList.remove("done"); }
   document.querySelectorAll(".step").forEach(x => x.classList.toggle("next", x.id === next));
-  if (selected && !nodesOf()[selected]) selected = null;
-  if (!selected) autoSelect();
-  renderThreats(); renderKpis(); renderMatrix();
-  if (selected) { const rep = reportCache[selected]; const dsKey = JSON.stringify(depositsOf(selected)); if (renderDetail.k !== selected + dsKey) { renderDetail.k = selected + dsKey; renderDetail(); } }
+  renderAll();
 }
 function depositEvent(d) {
-  const who = addrToRole[d.depositor.toLowerCase()];
-  if (d.status === 1) { showBanner(false, `${dusd(d.amount)} from ${who ? label(who) : short(d.depositor)} · verdict ${VNAME[d.verdict]}`); if (who) select(who); }
-  else if (d.status === 0) showBanner(true, `${dusd(d.amount)} from ${who ? label(who) : short(d.depositor)} · verdict ${VNAME[d.verdict]}`);
+  const role = addrToRole[d.depositor.toLowerCase()];
+  const sub = `<b>${dusd(d.amount)}</b> from ${who(d.depositor)} · registry verdict <b>${VNAME[d.verdict].toLowerCase()}</b>`;
+  if (d.status === 1) { showBanner(false, "Threat mitigated", "Deposit held", sub); if (role) select(role, false); }
+  else if (d.status === 0) showBanner(true, "No action needed", "Deposit credited", sub);
 }
-function showBanner(ok, text) {
+function showBanner(ok, k, big, sub) {
   const b = $("#banner"); b.classList.toggle("ok", ok);
-  $("#bIcon").textContent = ok ? "✅" : "🔒"; $("#bK").textContent = ok ? "DEPOSIT ALLOWED" : "THREAT MITIGATED";
-  $("#bBig").textContent = ok ? "CREDITED" : "FUNDS HELD"; $("#bSub").textContent = text;
+  $("#bIcon").innerHTML = icon(ok ? "check" : "lock"); $("#bK").textContent = k; $("#bBig").textContent = big; $("#bSub").innerHTML = sub;
   showTab("trail");
-  b.style.display = "grid"; const c = b.querySelector(".card2"); c.style.animation = "none"; void c.offsetWidth; c.style.animation = "";
+  b.style.display = "grid"; const c = b.querySelector(".b"); c.style.animation = "none"; void c.offsetWidth; c.style.animation = "";
   clearTimeout(showBanner.t); showBanner.t = setTimeout(() => b.style.display = "none", ok ? 3500 : 7000);
 }
-function toast(t) { const x = $("#toast"); x.textContent = t; x.style.display = "block"; clearTimeout(toast.t); toast.t = setTimeout(() => x.style.display = "none", 3000); }
+function toast(t) { const x = $("#toast"); x.textContent = t; x.style.display = "block"; clearTimeout(toast.t); toast.t = setTimeout(() => x.style.display = "none", 3500); }
 
-// ---------- activity feed ----------
+// ---------- activity ----------
+let incidentUntil = 0;
 function feedLine(ev) {
-  if (ev.source === "agent" && Date.now() - ev.at < 10000) verdictFromAgentLine(ev.line);
+  const fresh = Date.now() - ev.at < 10000;
+  if (ev.source === "agent" && fresh) verdictFromAgentLine(ev.line);
   const f = $("#feed"), d = document.createElement("div");
-  let cls = ev.source;
-  if (/MALICIOUS/.test(ev.line)) cls += " mal";
-  if (/DEPOSIT HELD|RELEASED/.test(ev.line)) cls += " held";
-  if (/CREDITED|finished|posted/.test(ev.line)) cls += " ok";
-  d.className = cls;
-  const safe = ev.line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/https:\/\/testnet\.monadexplorer\.com\/tx\/(0x[0-9a-f]{8})[0-9a-f]+/g, (m, h) => `<a href="${m}" target="_blank" rel="noopener">${h}…</a>`);
-  d.innerHTML = `<span style="color:#4b5573">${ev.source.padEnd(5)}</span> ${safe}`;
-  f.appendChild(d); f.scrollTop = f.scrollHeight;
-  // Time to verdict = how fast the INCIDENT was flagged; ignore later re-scores (e.g. after a deposit)
-  if (/▶ .*incident/.test(ev.line)) feedLine.incidentUntil = Date.now() + 60000;
-  if (/▶ .*(cashout|setup|clean|release)/.test(ev.line)) feedLine.incidentUntil = 0;
+  if (/DEPOSIT HELD|RELEASED/.test(ev.line)) d.className = "held";
+  else if (/MALICIOUS|failed|error/i.test(ev.line)) d.className = "mal";
+  else if (/CREDITED|finished|posted \d/.test(ev.line)) d.className = "ok";
+  const text = esc(ev.line.replace(/^[▶✔✖]\s*/, "").replace(/^\s*>>>\s*/, "")).replace(/https:\/\/testnet\.monadexplorer\.com\/tx\/(0x[0-9a-f]{8})[0-9a-f]+/g, (m, h) => `<a href="${m}" target="_blank" rel="noopener">${h}…</a>`);
+  d.innerHTML = `<span class="src">${ev.source.padEnd(6)}</span>${text}`;
+  const stick = f.scrollTop + f.clientHeight >= f.scrollHeight - 30;
+  f.appendChild(d); if (stick) f.scrollTop = f.scrollHeight;
+  // Time to verdict measures detection of the incident, not later re-scores (e.g. after the cash-out deposit)
+  if (ev.source === "ui" && /stage\.ts incident/.test(ev.line)) incidentUntil = ev.at + 60000;
+  else if (ev.source === "ui" && /stage\.ts (cashout|setup|clean|release)/.test(ev.line)) { incidentUntil = 0; if (/setup/.test(ev.line)) $("#kTtv").textContent = "–"; }
   const m = ev.line.match(/verdict landed (\d+)s/);
-  if (m && Date.now() - ev.at < 10000 && Date.now() < (feedLine.incidentUntil || 0)) { $("#mttv").textContent = m[1] + " s"; $("#kTtv").textContent = m[1] + " s"; }
-  if (/released/.test(ev.line)) { reportCache = {}; renderDetail.k = null; }
+  if (m && ev.at < incidentUntil) $("#kTtv").innerHTML = `${m[1]}<small>s after last hop</small>`;
+  if (fresh && /released/.test(ev.line)) detailKey = "";
 }
 
-// ---------- tabs + nav ----------
+// ---------- navigation ----------
 function showTab(name) {
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.tab === name));
   document.querySelectorAll(".pane").forEach(p => p.classList.toggle("on", p.id === "p-" + name));
@@ -509,32 +580,31 @@ function showTab(name) {
 document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => showTab(t.dataset.tab)));
 document.querySelectorAll(".nav").forEach(n => n.addEventListener("click", () => {
   document.querySelectorAll(".nav").forEach(x => x.classList.toggle("on", x === n));
-  const go = n.dataset.go;
-  if (go === "threats") $("#threatsCard").scrollIntoView({ behavior: "smooth" });
-  else if (go === "activity") $("#activityCard").scrollIntoView({ behavior: "smooth" });
-  else showTab(go);
+  $("#main").classList.toggle("activity", n.dataset.view === "activity");
+  $("#crumbView").textContent = n.dataset.view === "activity" ? "Activity" : "Threats";
+  const f = $("#feed"); f.scrollTop = f.scrollHeight;
 }));
 $("#toggleOld").addEventListener("click", () => { showOld = !showOld; renderThreats(); });
 
 // ---------- actions ----------
-async function post(url) { const r = await fetch(url, { method: "POST" }); const j = await r.json(); if (!j.ok && j.error) toast(j.error); }
-document.querySelectorAll("[data-run]").forEach(b => b.addEventListener("click", () => {
-  if (b.dataset.run === "setup") { prevVerdict = {}; selected = null; reportCache = {}; for (const e of Object.values(edgeEls)) e.classList.remove("hot"); regSub.textContent = "waiting for verdicts"; $("#mttv").textContent = "—"; $("#kTtv").textContent = "—"; }
-  post("/api/run/" + b.dataset.run);
-}));
+async function post(url) {
+  try { const r = await fetch(url, { method:"POST" }); const j = await r.json(); if (!j.ok && j.error) toast(j.error); }
+  catch { toast("The console server is not responding."); }
+}
+document.querySelectorAll("[data-run]").forEach(b => b.addEventListener("click", () => post("/api/run/" + b.dataset.run)));
 document.querySelectorAll("[data-agent]").forEach(b => b.addEventListener("click", () => post("/api/agent/" + b.dataset.agent)));
-fetch("/api/reports").then(r => r.json()).then(rows => { oldReports = rows; renderThreats(); });
+const loadReports = () => fetch("/api/reports").then(r => r.json()).then(rows => { oldReports = rows; renderThreats(); }).catch(() => {});
+loadReports();
 
 const es = new EventSource("/api/events");
 es.onmessage = (m) => {
   const ev = JSON.parse(m.data);
   if (ev.type === "state") applyState(ev.state);
   else if (ev.type === "log") feedLine(ev);
-  else if (ev.type === "transfer") {
-    const from = addrToRole[ev.from.toLowerCase()], to = addrToRole[ev.to.toLowerCase()];
-    if (from && to) animateCoin(from, to, dusd(ev.value));
-  } else if (ev.type === "status") fetch("/api/state").then(r => r.json()).then(applyState);
+  else if (ev.type === "transfer") { const from = addrToRole[ev.from.toLowerCase()], to = addrToRole[ev.to.toLowerCase()]; if (from && to) animateCoin(from, to, num(ev.value)); }
+  else if (ev.type === "status") { fetch("/api/state").then(r => r.json()).then(applyState).catch(() => {}); loadReports(); }
 };
+es.onerror = () => { $("#agentTxt").textContent = "disconnected"; $("#agentDot").classList.remove("on"); };
 </script>
 </body>
 </html>
