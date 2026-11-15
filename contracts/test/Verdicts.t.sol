@@ -143,6 +143,42 @@ contract VerdictsTest is Test {
         exchange.release(id);
     }
 
+    function test_RollbackReturnsHeldFundsToVictim() public {
+        address victim = makeAddr("victim");
+        _flagMalicious(attackerHop);
+        vm.prank(attackerHop);
+        (uint256 id,) = exchange.deposit(100e18);
+
+        exchange.rollback(id, victim);
+
+        assertEq(token.balanceOf(victim), 100e18, "victim made whole");
+        assertEq(exchange.balanceOf(attackerHop), 0, "attacker credited nothing");
+        (,,, DemoExchange.Status status) = exchange.deposits(id);
+        assertEq(uint8(status), uint8(DemoExchange.Status.RolledBack));
+
+        // cannot roll back or release twice
+        vm.expectRevert(DemoExchange.NotHeld.selector);
+        exchange.rollback(id, victim);
+        vm.expectRevert(DemoExchange.NotHeld.selector);
+        exchange.release(id);
+    }
+
+    function test_OnlyOwnerCanRollback() public {
+        _flagMalicious(attackerHop);
+        vm.prank(attackerHop);
+        (uint256 id,) = exchange.deposit(100e18);
+        vm.prank(attackerHop);
+        vm.expectRevert();
+        exchange.rollback(id, attackerHop);
+    }
+
+    function test_CannotRollbackACreditedDeposit() public {
+        vm.prank(clean);
+        (uint256 id,) = exchange.deposit(100e18);
+        vm.expectRevert(DemoExchange.NotHeld.selector);
+        exchange.rollback(id, clean);
+    }
+
     function test_CleanWalletCanWithdraw() public {
         vm.startPrank(clean);
         exchange.deposit(100e18);

@@ -15,7 +15,8 @@ contract DemoExchange is Ownable {
     enum Status {
         Credited,
         Held,
-        Released
+        Released,
+        RolledBack
     }
 
     struct Deposit {
@@ -36,9 +37,11 @@ contract DemoExchange is Ownable {
         uint256 indexed id, address indexed depositor, uint256 amount, VerdictRegistry.Verdict verdict
     );
     event DepositReleased(uint256 indexed id, address indexed depositor, uint256 amount);
+    event DepositRolledBack(uint256 indexed id, address indexed depositor, address indexed victim, uint256 amount);
     event Withdrawn(address indexed account, uint256 amount);
 
     error NotHeld();
+    error ZeroAddress();
     error InsufficientBalance();
 
     constructor(IERC20 token_, VerdictRegistry registry_) Ownable(msg.sender) {
@@ -78,6 +81,18 @@ contract DemoExchange is Ownable {
         d.status = Status.Released;
         balanceOf[d.depositor] += d.amount;
         emit DepositReleased(id, d.depositor, d.amount);
+    }
+
+    /// @notice Rollback: return a held deposit to the wallet that originally paid it (the victim).
+    /// @dev Only possible because the funds are still in this contract. The victim is identified
+    ///      offchain from the threat report (who paid the ransom wallet); pilot trust model: the owner decides.
+    function rollback(uint256 id, address victim) external onlyOwner {
+        if (victim == address(0)) revert ZeroAddress();
+        Deposit storage d = deposits[id];
+        if (d.status != Status.Held) revert NotHeld();
+        d.status = Status.RolledBack;
+        token.safeTransfer(victim, d.amount);
+        emit DepositRolledBack(id, d.depositor, victim, d.amount);
     }
 
     function withdraw(uint256 amount) external {
