@@ -1,8 +1,18 @@
 {
   "wallet": "0x69a963f92d692b0226356969c485636fb29dc023",
   "verdict": "MALICIOUS",
-  "behaviors": 18,
+  "behaviors": 19,
   "matched": [
+    {
+      "behavior": "RAPID_PASS_THROUGH",
+      "title": "Rapid pass-through",
+      "source": "FATF 2023 Countering Ransomware Financing; FATF 2020 VA Red Flags (rapid movement of funds) — to confirm",
+      "detail": "Forwarded 100.0% of a 1,000 dUSD receipt within 493s",
+      "txs": [
+        "0x76f58baa3f24cdfacb92ab1d78dae797f89d0697bc08f2a9aac33d61a2048f0f",
+        "0x5c00a86c8f185ff7acdbfdbfb882d39ee87fd2c8da029846f78a50ca4fa9ad8e"
+      ]
+    },
     {
       "behavior": "NEW_WALLET_CHAIN",
       "title": "New-wallet chain",
@@ -29,11 +39,18 @@
       "counterparty": "0x5844Bdd07e68bc28ffE07964b47Bbc4AC9925c51",
       "amount": "1,000 dUSD",
       "tx": "0x76f58baa3f24cdfacb92ab1d78dae797f89d0697bc08f2a9aac33d61a2048f0f"
+    },
+    {
+      "time": "2026-11-15T21:33:50.000Z",
+      "direction": "out",
+      "counterparty": "0xD307DE57992B1b01cd95Ce7E38b15251D881950A",
+      "amount": "1,000 dUSD",
+      "tx": "0x5c00a86c8f185ff7acdbfdbfb882d39ee87fd2c8da029846f78a50ca4fa9ad8e"
     }
   ],
   "evidenceHash": null,
   "chainId": 10143,
-  "generatedAt": "2026-11-15T21:25:40.079Z",
-  "reportHash": "0x3dad55ecad381359b62ca90aed616a80b04b9d60cf949b5f80e84db9811c8ab6",
-  "verdictTx": "0x2c938252fb6a7a3f3d883022d84d8841d78a05f4351564aac91d468174ca019d"
+  "generatedAt": "2026-11-15T21:34:04.979Z",
+  "reportHash": "0x726b9c107f33c979d0196fb5e3594ad7b32fb4c36b0c500895f732eb85ae4c2e",
+  "verdictTx": "0x7636a388c0ef3de4532f7f496c85710441fec984051893d6693993f5dd034b25"
 }

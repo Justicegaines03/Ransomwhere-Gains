@@ -18,3 +18,11 @@ Held deposit: [`0x3488bc82…`](https://testnet.monadexplorer.com/tx/0x3488bc822
 |---|---|---|
 | 5 | [05-ui-incident-flagged.jpg](05-ui-incident-flagged.jpg) | After **Run incident**: every laundering wallet red, money edges lit, registry shows the last verdict, latency badge 3 s |
 | 6 | [06-ui-deposit-held.jpg](06-ui-deposit-held.jpg) | After **Cash out**: full-screen DEPOSIT HELD banner, deposits table HELD vs CREDITED |
+
+## EDR console (`bun run ui`, current)
+
+| # | Screenshot | What it shows |
+|---|---|---|
+| 7 | [07-console-funds-held.jpg](07-console-funds-held.jpg) | The console after the cash-out: THREAT MITIGATED / FUNDS HELD over the Money Trail, Threats list with every laundering wallet, KPIs (funds held, active threats) |
+
+Screenshots 5–6 show the earlier, simpler UI (tag `v2-ui-simple`).

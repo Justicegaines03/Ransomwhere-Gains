@@ -67,7 +67,7 @@ tr.old td{opacity:.45}
 .sev.m{background:var(--bad);box-shadow:0 0 6px var(--bad)}.sev.s{background:var(--sus)}
 .mit{font-size:11px;font-weight:700}
 .mit.held{color:var(--gold)}.mit.mon{color:var(--muted)}.mit.rel{color:var(--blue)}
-.addr{font-family:Menlo,monospace;font-size:11px;color:var(--muted)}
+.addr{font-family:Menlo,monospace;font-size:11px;color:var(--muted);word-break:break-all}
 .tabs{display:flex;gap:2px;padding:0 10px;border-bottom:1px solid var(--line)}
 .tab{padding:10px 12px;color:var(--muted);cursor:pointer;font-weight:600;border-bottom:2px solid transparent}
 .tab.on{color:var(--text);border-color:var(--accent)}
@@ -333,16 +333,16 @@ const deposits = () => (state && state.deposits) || [];
 function depositsOf(role) { const a = (nodesOf()[role] || {}).address; return a ? deposits().filter(d => d.depositor.toLowerCase() === a.toLowerCase()) : []; }
 function classification(role, n) {
   if (n.behaviors & BIT.RANSOM_NOTE_EVIDENCE) return "Ransom wallet";
-  if (role === "cashout") return "Cash-out attempt";
+  if (role === "cashout") return "Cash-out";
   if (role === "merge") return "Consolidation";
-  if (role.startsWith("hop")) return "Layering hop";
+  if (role.startsWith("hop")) return "Layering";
   return "Laundering";
 }
 function mitigation(role) {
   const ds = depositsOf(role);
-  if (ds.some(d => d.status === 1)) return ["held", "🔒 Funds held"];
+  if (ds.some(d => d.status === 1)) return ["held", "🔒 Held"];
   if (ds.some(d => d.status === 2)) return ["rel", "Released"];
-  return ["mon", "Monitoring"];
+  return ["mon", "Watching"];
 }
 function threatRoles() { return Object.entries(nodesOf()).filter(([r, n]) => NODES[r] && n.verdict >= 1).map(([r]) => r).sort((a, b) => TRAIL.indexOf(b) - TRAIL.indexOf(a)); }
 
@@ -493,8 +493,11 @@ function feedLine(ev) {
   const safe = ev.line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/https:\/\/testnet\.monadexplorer\.com\/tx\/(0x[0-9a-f]{8})[0-9a-f]+/g, (m, h) => `<a href="${m}" target="_blank" rel="noopener">${h}…</a>`);
   d.innerHTML = `<span style="color:#4b5573">${ev.source.padEnd(5)}</span> ${safe}`;
   f.appendChild(d); f.scrollTop = f.scrollHeight;
+  // Time to verdict = how fast the INCIDENT was flagged; ignore later re-scores (e.g. after a deposit)
+  if (/▶ .*incident/.test(ev.line)) feedLine.incidentUntil = Date.now() + 60000;
+  if (/▶ .*(cashout|setup|clean|release)/.test(ev.line)) feedLine.incidentUntil = 0;
   const m = ev.line.match(/verdict landed (\d+)s/);
-  if (m && Date.now() - ev.at < 10000) { $("#mttv").textContent = m[1] + " s"; $("#kTtv").textContent = m[1] + " s"; }
+  if (m && Date.now() - ev.at < 10000 && Date.now() < (feedLine.incidentUntil || 0)) { $("#mttv").textContent = m[1] + " s"; $("#kTtv").textContent = m[1] + " s"; }
   if (/released/.test(ev.line)) { reportCache = {}; renderDetail.k = null; }
 }
 
