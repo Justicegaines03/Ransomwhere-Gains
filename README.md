@@ -1,4 +1,4 @@
-# Ransomware Wallet Verdicts (working name)
+# Ransomwhere-Gains
 
 **EDR for money:** behavior-based ransomware verdicts for wallets, published onchain so an exchange can hold a ransom before it is cashed out.
 
