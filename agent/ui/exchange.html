@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo Exchange (staged)</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f5f7;color:#16181d;font:14px/1.5 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-feature-settings:"tnum"}
+.sim{background:#0b0c11;color:#8c90a0;font-size:12px;padding:9px 16px;display:flex;gap:14px;align-items:center}
+.sim b{color:#e7e8ee;font-weight:600}.sim a{color:#5b9dff;text-decoration:none;margin-left:auto}
+header{background:#fff;border-bottom:1px solid #e3e5ea;padding:14px 24px;display:flex;align-items:center;gap:20px}
+.logo{font-weight:700;font-size:16px;letter-spacing:-.2px}
+.logo i{display:inline-block;width:10px;height:10px;border-radius:2px;background:#0f7b5f;margin-right:8px}
+.acct{margin-left:auto;display:flex;align-items:center;gap:8px;color:#5c6270;font-size:13px}
+select{font:inherit;padding:6px 10px;border:1px solid #cfd3da;border-radius:6px;background:#fff}
+main{max-width:860px;margin:28px auto;padding:0 20px;display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+.card{background:#fff;border:1px solid #e3e5ea;border-radius:10px;padding:20px}
+h2{margin:0 0 14px;font-size:15px}
+.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef0f3}
+.row:last-of-type{border:none}
+.row span{color:#5c6270}.row b{font-weight:600}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12.5px}
+.amount{font-size:30px;font-weight:600;letter-spacing:-.5px;margin:6px 0 2px}
+.amount small{font-size:14px;color:#5c6270;font-weight:400;margin-left:6px}
+button{all:unset;cursor:pointer;display:block;width:100%;text-align:center;background:#0f7b5f;color:#fff;font-weight:600;padding:11px 0;border-radius:8px;margin-top:16px}
+button:hover{background:#0c6a52}
+button[disabled]{background:#c9ced6;cursor:not-allowed}
+.result{display:none;margin-top:16px;border-radius:8px;padding:14px 16px;border:1px solid}
+.result.ok{display:block;background:#eaf7f1;border-color:#b7e3d0;color:#0c5c46}
+.result.hold{display:block;background:#fff6e5;border-color:#f1d59a;color:#7a5200}
+.result b{display:block;font-size:15px;margin-bottom:2px}
+.hist td,.hist th{text-align:left;padding:7px 0;border-bottom:1px solid #eef0f3;font-size:13px}
+.hist th{color:#5c6270;font-weight:500}
+.hist{width:100%;border-collapse:collapse}
+.pill{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px}
+.pill.c{background:#eaf7f1;color:#0c5c46}.pill.h{background:#fff6e5;color:#7a5200}.pill.r{background:#e8f0ff;color:#1f4fa8}
+.muted{color:#5c6270;font-size:13px}
+</style>
+</head>
+<body>
+<div class="sim"><b>Staged simulation</b><span>Demo exchange · test network only</span><a href="/">Open Ransomwhere-Gains console</a></div>
+<header>
+  <div class="logo"><i></i>Demo Exchange</div>
+  <div class="acct">Signed in as
+    <select id="who"><option value="clean">Everyday user</option><option value="cashout">Attacker's cash-out wallet</option></select>
+  </div>
+</header>
+<main>
+  <section class="card">
+    <h2>Deposit dUSD</h2>
+    <div class="muted">From wallet <span class="mono" id="addr">–</span></div>
+    <div class="amount"><span id="amt">–</span><small>dUSD</small></div>
+    <div class="muted">Wallet balance <b id="bal">–</b> dUSD</div>
+    <button id="dep" disabled>Deposit</button>
+    <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
+  </section>
+  <section class="card">
+    <h2>Account</h2>
+    <div class="row"><span>Available balance</span><b><span id="avail">0</span> dUSD</b></div>
+    <div class="row"><span>On hold</span><b><span id="hold">0</span> dUSD</b></div>
+    <h2 style="margin-top:20px">Deposit history</h2>
+    <table class="hist"><thead><tr><th>Ref</th><th>Amount</th><th>Status</th></tr></thead><tbody id="hist"></tbody></table>
+    <div class="muted" id="noHist">No deposits yet.</div>
+  </section>
+</main>
+<script>
+const $ = (s) => document.querySelector(s);
+const num = (v) => (Number(BigInt(v) / 10n ** 14n) / 10000).toLocaleString("en-US");
+const AMT = { clean: 100n * 10n ** 18n, cashout: 1000n * 10n ** 18n };
+let state = null, busy = false, lastSeen = null;
+const params = new URLSearchParams(location.search);
+if (params.get("as") === "cashout") $("#who").value = "cashout";
+
+function render() {
+  if (!state || !state.ready) return;
+  const role = $("#who").value, n = state.nodes[role];
+  if (!n || !n.address) return;
+  const mine = (state.deposits || []).filter(d => d.depositor.toLowerCase() === n.address.toLowerCase());
+  $("#addr").textContent = n.address.slice(0, 10) + "…" + n.address.slice(-6);
+  $("#amt").textContent = num(AMT[role]);
+  $("#bal").textContent = n.balance != null ? num(n.balance) : "–";
+  const can = n.balance != null && BigInt(n.balance) >= AMT[role];
+  $("#dep").disabled = busy || !!state.stageRunning || !can;
+  $("#dep").textContent = busy ? "Depositing…" : can ? `Deposit ${num(AMT[role])} dUSD` : mine.length ? "Deposited" : "Nothing to deposit yet";
+  const sum = (st) => mine.filter(d => st.includes(d.status)).reduce((s, d) => s + BigInt(d.amount), 0n);
+  $("#avail").textContent = num(sum([0, 2])); $("#hold").textContent = num(sum([1]));
+  $("#hist").innerHTML = mine.slice().reverse().map(d => `<tr><td>#${d.id}</td><td>${num(d.amount)} dUSD</td><td><span class="pill ${"chr"[d.status]}">${["Credited","On hold","Released"][d.status]}</span></td></tr>`).join("");
+  $("#noHist").style.display = mine.length ? "none" : "block";
+  const last = mine[mine.length - 1], r = $("#result");
+  r.className = "result";
+  if (last) {
+    if (last.status === 1) { r.classList.add("hold"); $("#rT").textContent = "Deposit on hold"; $("#rS").textContent = `Your deposit of ${num(last.amount)} dUSD (ref #${last.id}) is under compliance review. The funds are not available to trade or withdraw.`; }
+    else { r.classList.add("ok"); $("#rT").textContent = last.status === 2 ? "Deposit released" : "Deposit credited"; $("#rS").textContent = `${num(last.amount)} dUSD is available in your account (ref #${last.id}).`; }
+    if (busy && last.id !== lastSeen) busy = false;
+  }
+}
+$("#who").addEventListener("change", () => { busy = false; render(); });
+$("#dep").addEventListener("click", async () => {
+  const role = $("#who").value, n = state.nodes[role];
+  const mine = (state.deposits || []).filter(d => d.depositor.toLowerCase() === n.address.toLowerCase());
+  lastSeen = mine.length ? mine[mine.length - 1].id : null;
+  busy = true; render();
+  try { const j = await (await fetch("/api/run/" + (role === "clean" ? "clean" : "cashout"), { method:"POST" })).json(); if (!j.ok) { busy = false; $("#rT").textContent = "Could not deposit"; $("#rS").textContent = j.error || ""; $("#result").className = "result hold"; } }
+  catch { busy = false; }
+  render();
+});
+const es = new EventSource("/api/events");
+es.onmessage = (m) => { const ev = JSON.parse(m.data); if (ev.type === "state") { state = ev.state; render(); } else if (ev.type === "log" && /(clean|cashout) failed/.test(ev.line)) { busy = false; render(); } };
+</script>
+</body>
+</html>

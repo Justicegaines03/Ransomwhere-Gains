@@ -30,6 +30,7 @@ code,.mono{font-family:var(--mono);font-size:11.5px}
 .right{margin-left:auto;display:flex;gap:8px;align-items:center}
 .chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--muted);height:28px}
 .chip b{color:var(--text);font-weight:600}
+a.chip{color:var(--text)}a.chip:hover{background:var(--raise);text-decoration:none}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
 .dot.on{background:var(--ok)}
 
@@ -202,6 +203,8 @@ tr.old td{color:var(--dim)}
   <div class="mark">RG</div>
   <div class="crumb">Ransomwhere-Gains<span>/</span><em id="crumbView">Threats</em></div>
   <div class="right">
+    <a class="chip" href="/victim" target="_blank" rel="noopener">Victim screen</a>
+    <a class="chip" href="/exchange" target="_blank" rel="noopener">Exchange</a>
     <span class="chip">Network <b>Monad Testnet</b></span>
     <span class="chip"><span class="dot" id="agentDot"></span>Detection agent <b id="agentTxt">stopped</b></span>
   </div>
@@ -213,12 +216,13 @@ tr.old td{color:var(--dim)}
 </nav>
 
 <div class="sim">
-  <span class="lbl"><b>Simulation</b> · staged incident on testnet</span>
+  <span class="lbl"><b>Simulation</b></span>
   <div class="step" id="s0"><span class="n"><span>1</span><svg class="i"><use href="#i-check"/></svg></span><button class="act" data-run="setup" title="Creates fresh wallets only if the current ones were already used">Reset wallets</button></div><i class="sep"></i>
   <div class="step" id="s1"><span class="n"><span>2</span><svg class="i"><use href="#i-check"/></svg></span><button class="act" data-agent="start">Start agent</button><button data-agent="stop">Stop</button></div><i class="sep"></i>
   <div class="step" id="s2"><span class="n"><span>3</span><svg class="i"><use href="#i-check"/></svg></span><button class="act" data-run="clean">Clean deposit</button></div><i class="sep"></i>
-  <div class="step" id="s3"><span class="n"><span>4</span><svg class="i"><use href="#i-check"/></svg></span><button class="act" data-run="incident">Run incident</button></div><i class="sep"></i>
-  <div class="step" id="s4"><span class="n"><span>5</span><svg class="i"><use href="#i-check"/></svg></span><button class="act" data-run="cashout">Attempt cash-out</button></div>
+  <div class="step" id="s3"><span class="n"><span>4</span><svg class="i"><use href="#i-check"/></svg></span><button class="act" data-run="pay" title="Or pay from MetaMask on the victim screen">Victim pays</button></div><i class="sep"></i>
+  <div class="step" id="s5"><span class="n"><span>5</span><svg class="i"><use href="#i-check"/></svg></span><button class="act" data-run="launder">Attacker launders</button></div><i class="sep"></i>
+  <div class="step" id="s4"><span class="n"><span>6</span><svg class="i"><use href="#i-check"/></svg></span><button class="act" data-run="cashout">Attempt cash-out</button></div>
   <span class="busy" id="busy"><i class="spin"></i><span id="busyTxt"></span></span>
 </div>
 
@@ -301,7 +305,7 @@ const MATRIX = [
   { stage:"Propagation", sub:"Risk follows the money", techs:[{k:"TAINTED_BY_FLAGGED",t:"Funds from a malicious wallet",s:"Downstream taint (pilot rule)"}] },
   { stage:"Integration", sub:"Cashing out", techs:[{k:"CASHOUT",t:"Deposit at an exchange",s:"Where the hold happens"}] },
 ];
-const STAGE_TEXT = { setup:"Preparing wallets", clean:"Depositing", incident:"Incident running", cashout:"Cash-out running", release:"Releasing deposit" };
+const STAGE_TEXT = { setup:"Preparing wallets", clean:"Depositing", incident:"Incident running", pay:"Victim paying", launder:"Laundering", fund:"Funding victim wallet", cashout:"Cash-out running", release:"Releasing deposit" };
 
 let state = null, addrToRole = {}, prevVerdict = {}, seenDeposits = null, explorer = "https://testnet.monadexplorer.com";
 let selected = null, selectedAddr = null, manual = false, oldReports = [], showOld = false, armedRelease = null, detailToken = 0, detailKey = "";
@@ -529,9 +533,9 @@ function applyState(s) {
   const addr = (r) => s.nodes[r] && s.nodes[r].address ? s.nodes[r].address.toLowerCase() : null;
   const used = anyFlagged || deps.some(d => d.depositor.toLowerCase() === addr("cashout"));
   // Step 1 is "done" while the wallets are fresh; once a trail has been run, Reset becomes the next step again only after cash-out
-  const steps = { s0: !!addr("victim"), s1: !!s.agentRunning, s2: deps.some(d => d.depositor.toLowerCase() === addr("clean")), s3: anyFlagged, s4: deps.some(d => d.depositor.toLowerCase() === addr("cashout")) };
+  const steps = { s0: !!addr("victim"), s1: !!s.agentRunning, s2: deps.some(d => d.depositor.toLowerCase() === addr("clean")), s3: anyFlagged, s5: ((s.nodes.cashout || {}).verdict ?? 0) >= 1, s4: deps.some(d => d.depositor.toLowerCase() === addr("cashout")) };
   let next = null;
-  for (const k of ["s0","s1","s2","s3","s4"]) { $("#"+k).classList.toggle("done", !!steps[k]); if (!steps[k] && !next) next = k; }
+  for (const k of ["s0","s1","s2","s3","s5","s4"]) { $("#"+k).classList.toggle("done", !!steps[k]); if (!steps[k] && !next) next = k; }
   if (!next && used) { next = "s0"; $("#s0").classList.remove("done"); }
   document.querySelectorAll(".step").forEach(x => x.classList.toggle("next", x.id === next));
   renderAll();
@@ -565,8 +569,8 @@ function feedLine(ev) {
   const stick = f.scrollTop + f.clientHeight >= f.scrollHeight - 30;
   f.appendChild(d); if (stick) f.scrollTop = f.scrollHeight;
   // Time to verdict measures detection of the incident, not later re-scores (e.g. after the cash-out deposit)
-  if (ev.source === "ui" && /stage\.ts incident/.test(ev.line)) incidentUntil = ev.at + 60000;
-  else if (ev.source === "ui" && /stage\.ts (cashout|setup|clean|release)/.test(ev.line)) { incidentUntil = 0; if (/setup/.test(ev.line)) $("#kTtv").textContent = "–"; }
+  if (ev.source === "ui" && /stage\.ts (incident|launder)/.test(ev.line)) incidentUntil = ev.at + 60000;
+  else if (ev.source === "ui" && /stage\.ts (cashout|setup|clean|release|pay|fund)/.test(ev.line)) { incidentUntil = 0; if (/setup/.test(ev.line)) $("#kTtv").textContent = "–"; }
   const m = ev.line.match(/verdict landed (\d+)s/);
   if (m && ev.at < incidentUntil) $("#kTtv").innerHTML = `${m[1]}<small>s after last hop</small>`;
   if (fresh && /released/.test(ev.line)) detailKey = "";

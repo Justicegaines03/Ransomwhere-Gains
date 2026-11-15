@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Victim workstation (staged)</title>
+<style>
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:#1d2733 radial-gradient(900px 500px at 50% 30%,#2b3a4c,#141b24);font:14px/1.45 Tahoma,Verdana,"Segoe UI",sans-serif;color:#fff;display:grid;place-items:center}
+.sim{position:fixed;top:0;left:0;right:0;background:#0b0c11;color:#8c90a0;font:12px/1 Inter,-apple-system,sans-serif;padding:9px 14px;display:flex;gap:14px;align-items:center;border-bottom:1px solid #23252f}
+.sim b{color:#e7e8ee;font-weight:600}
+.sim a{color:#5b9dff;text-decoration:none;margin-left:auto}
+.win{width:min(900px,94vw);background:#8b1a1a;border:1px solid #5c0f0f;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.title{background:#6e1212;padding:7px 10px;font-size:13px;display:flex;justify-content:space-between}
+.title span:last-child{letter-spacing:6px;opacity:.7}
+.body{display:grid;grid-template-columns:230px 1fr;gap:14px;padding:14px}
+.left{display:flex;flex-direction:column;gap:12px}
+.lock{height:150px;display:grid;place-items:center;border:1px solid #b24a4a;background:#7a1616}
+.lock svg{width:92px;height:92px;stroke:#fff;fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.timer{border:1px solid #b24a4a;padding:9px 10px;text-align:center;background:#7a1616}
+.timer .l{color:#ffd24d;font-size:12.5px}
+.timer .d{font-size:11.5px;opacity:.85;margin:2px 0 6px}
+.timer .t{font:700 24px/1 "Courier New",monospace;letter-spacing:2px}
+.timer small{display:block;font-size:10.5px;opacity:.7;margin-top:3px}
+h1{margin:0 0 10px;font-size:24px;font-weight:700}
+.msg{background:#fff;color:#111;padding:14px 16px;height:238px;overflow:auto;font-size:13.5px}
+.msg h2{margin:0 0 6px;font-size:15px}
+.msg p{margin:0 0 12px}
+.pay{margin-top:12px;border:1px solid #b24a4a;background:#7a1616;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:center}
+.pay .l{color:#ffd24d;font-weight:700}
+.pay .addr{grid-column:1/3;background:#fff;color:#111;font:13px "Courier New",monospace;padding:8px 10px;display:flex;justify-content:space-between;gap:10px;word-break:break-all}
+.pay .addr button{flex:none}
+button{all:unset;cursor:pointer;background:#e9e9e9;color:#111;border:1px solid #777;padding:6px 16px;font:13px Tahoma,sans-serif;text-align:center}
+button:hover{background:#fff}
+button.big{font-weight:700;padding:9px 26px}
+button[disabled]{opacity:.5;cursor:not-allowed}
+.bal{font-size:12.5px;opacity:.9}
+.done{display:none;margin-top:12px;border:1px solid #b24a4a;background:#5c0f0f;padding:12px 14px}
+.done b{color:#ffd24d}
+.done a{color:#fff}
+.done .next{display:inline-block;margin-top:10px;background:#7c5cff;color:#fff;border:none;padding:9px 16px;font:600 13px Inter,-apple-system,sans-serif;border-radius:6px;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="sim"><b>Staged simulation</b><span>Victim workstation · no real malware, test network only</span><a href="/">Open Ransomwhere-Gains console</a></div>
+
+<div class="win">
+  <div class="title"><span>File Recovery Service 2.0</span><span>_ □ ×</span></div>
+  <div class="body">
+    <div class="left">
+      <div class="lock"><svg viewBox="0 0 24 24"><path d="M7 11V8a5 5 0 0 1 10 0v3M5.5 11h13v9h-13zM12 14.5v2.5"/></svg></div>
+      <div class="timer"><div class="l">Payment will be raised on</div><div class="d" id="d1"></div><div class="t" id="t1">02:23:59:59</div><small>days : hours : minutes : seconds</small></div>
+      <div class="timer"><div class="l">Your files will be lost on</div><div class="d" id="d2"></div><div class="t" id="t2">06:23:59:59</div><small>days : hours : minutes : seconds</small></div>
+    </div>
+    <div>
+      <h1>Your files have been encrypted</h1>
+      <div class="msg">
+        <h2>What happened to my computer?</h2>
+        <p>Your documents, photos, databases and other important files are no longer accessible because they have been encrypted. Do not waste your time looking for a way to recover them. Nobody can recover your files without our decryption service.</p>
+        <h2>Can I recover my files?</h2>
+        <p>Yes. But you do not have much time. After 3 days the price doubles. After 7 days your files are gone for good.</p>
+        <h2>How do I pay?</h2>
+        <p>Payment is accepted in dUSD on Monad only. Send the exact amount to the address below, then click Check Payment.</p>
+      </div>
+      <div class="pay">
+        <div><span class="l">Send <span id="amt">1,000</span> dUSD to this address:</span><div class="bal" id="who">Wallet not connected</div></div>
+        <div style="display:flex;gap:8px"><button class="big" id="connect">Connect MetaMask</button><button class="big" id="payBtn" disabled>Send payment</button></div>
+        <div class="addr"><span id="addr">loading…</span><button id="copy">Copy</button></div>
+      </div>
+      <div class="done" id="done">
+        <b id="doneT">Payment sent.</b> <span id="tx"></span><br>
+        <span id="doneS">The money has left the victim’s wallet. It is now the attacker’s to launder.</span><br>
+        <a class="next" href="/">See what Ransomwhere-Gains saw</a>
+      </div>
+      <div class="bal" style="margin-top:8px;opacity:.75">No MetaMask? <a href="#" id="demoPay" style="color:#fff">Pay from the built-in demo wallet</a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const CHAIN = { chainId:"0x279f", chainName:"Monad Testnet", nativeCurrency:{ name:"MON", symbol:"MON", decimals:18 }, rpcUrls:["https://testnet-rpc.monad.xyz"], blockExplorerUrls:["https://testnet.monadexplorer.com"] };
+const AMOUNT = 1000n * 10n ** 18n;
+const num = (v) => (Number(BigInt(v) / 10n ** 14n) / 10000).toLocaleString("en-US");
+const pad = (hex) => hex.replace(/^0x/, "").padStart(64, "0");
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+let ransom = null, token = null, explorer = CHAIN.blockExplorerUrls[0], account = null, busy = false;
+
+// countdowns (cosmetic)
+const start = Date.now(), ends = [3 * 864e5 - 1000, 7 * 864e5 - 1000];
+const fmtDate = (ms) => new Date(start + ms).toLocaleString("en-US", { month:"numeric", day:"numeric", year:"numeric", hour:"2-digit", minute:"2-digit", second:"2-digit" });
+$("#d1").textContent = fmtDate(ends[0]); $("#d2").textContent = fmtDate(ends[1]);
+setInterval(() => ends.forEach((e, i) => {
+  let s = Math.max(0, Math.floor((start + e - Date.now()) / 1000));
+  const d = Math.floor(s / 86400); s -= d * 86400; const h = Math.floor(s / 3600); s -= h * 3600; const m = Math.floor(s / 60); s -= m * 60;
+  $("#t" + (i + 1)).textContent = [d, h, m, s].map(x => String(x).padStart(2, "0")).join(":");
+}), 1000);
+
+function note(title, sub, txHash) {
+  $("#doneT").textContent = title; $("#doneS").textContent = sub || "";
+  $("#tx").innerHTML = txHash ? `Transaction <a target="_blank" rel="noopener" href="${explorer}/tx/${txHash}">${txHash.slice(0, 12)}…</a>` : "";
+  $("#done").style.display = "block";
+}
+async function getState() { return (await fetch("/api/state")).json(); }
+async function loadTargets() {
+  const s = await getState();
+  if (!s.ready) return s;
+  explorer = s.explorer || explorer; token = s.addresses.token;
+  const r = s.nodes.ransom && s.nodes.ransom.address;
+  if (r && r !== ransom) { ransom = r; $("#addr").textContent = ransom; $("#done").style.display = "none"; }
+  return s;
+}
+const eth = () => window.ethereum;
+async function tokenBalance(addr) { return BigInt(await eth().request({ method:"eth_call", params:[{ to: token, data:"0x70a08231" + pad(addr) }, "latest"] })); }
+async function refreshWallet() {
+  if (!account) return;
+  const bal = await tokenBalance(account);
+  $("#who").textContent = `MetaMask ${account.slice(0, 6)}…${account.slice(-4)} · balance ${num(bal)} dUSD`;
+  $("#payBtn").disabled = busy || bal < AMOUNT;
+  return bal;
+}
+
+$("#copy").addEventListener("click", () => { if (ransom) navigator.clipboard?.writeText(ransom); $("#copy").textContent = "Copied"; setTimeout(() => $("#copy").textContent = "Copy", 1500); });
+
+$("#connect").addEventListener("click", async () => {
+  if (!eth()) return note("MetaMask not found.", "Open this page in the browser where MetaMask is installed, or use the demo wallet below.");
+  try {
+    busy = true; $("#connect").disabled = true; $("#connect").textContent = "Connecting…";
+    await loadTargets();
+    [account] = await eth().request({ method:"eth_requestAccounts" });
+    try { await eth().request({ method:"wallet_switchEthereumChain", params:[{ chainId: CHAIN.chainId }] }); }
+    catch (e) { if (e.code === 4902) await eth().request({ method:"wallet_addEthereumChain", params:[CHAIN] }); else throw e; }
+    if (await tokenBalance(account) < AMOUNT) {
+      $("#connect").textContent = "Funding wallet…";
+      const j = await (await fetch("/api/fund-victim/" + account, { method:"POST" })).json();
+      if (!j.ok) throw new Error(j.error || "Could not fund the wallet");
+      for (let i = 0; i < 40 && (await tokenBalance(account)) < AMOUNT; i++) await sleep(700);
+    } else {
+      await fetch("/api/fund-victim/" + account, { method:"POST" }); // registers this wallet as the victim in the console
+    }
+    $("#connect").textContent = "Connected"; busy = false;
+    await refreshWallet();
+  } catch (e) {
+    busy = false; $("#connect").disabled = false; $("#connect").textContent = "Connect MetaMask";
+    note("Could not connect.", e.message || String(e));
+  }
+});
+
+$("#payBtn").addEventListener("click", async () => {
+  try {
+    busy = true; $("#payBtn").disabled = true; $("#payBtn").textContent = "Confirm in MetaMask…";
+    await loadTargets();
+    const hash = await eth().request({ method:"eth_sendTransaction", params:[{ from: account, to: token, data:"0xa9059cbb" + pad(ransom) + pad(AMOUNT.toString(16)) }] });
+    $("#payBtn").textContent = "Sending…";
+    let rc = null;
+    for (let i = 0; i < 60 && !rc; i++) { await sleep(500); rc = await eth().request({ method:"eth_getTransactionReceipt", params:[hash] }); }
+    busy = false; $("#payBtn").textContent = "Paid";
+    if (rc && rc.status === "0x1") note("Payment sent.", "The money has left the victim’s wallet. It is now the attacker’s to launder.", hash);
+    else note("Payment did not confirm.", "Check the transaction in MetaMask.", hash);
+    refreshWallet();
+  } catch (e) {
+    busy = false; $("#payBtn").textContent = "Send payment"; refreshWallet();
+    note(e.code === 4001 ? "Payment cancelled in MetaMask." : "Payment failed.", e.code === 4001 ? "" : (e.message || String(e)));
+  }
+});
+
+$("#demoPay").addEventListener("click", async (ev) => {
+  ev.preventDefault();
+  const j = await (await fetch("/api/run/pay", { method:"POST" })).json().catch(() => ({ ok:false, error:"The demo server is not responding" }));
+  note(j.ok ? "Payment sent from the demo wallet." : "Could not pay.", j.ok ? "The money has left the victim’s wallet. It is now the attacker’s to launder." : j.error);
+});
+
+if (eth()) eth().on?.("accountsChanged", (a) => { account = a[0] || null; if (account) refreshWallet(); else { $("#who").textContent = "Wallet not connected"; $("#payBtn").disabled = true; } });
+loadTargets().catch(() => {});
+setInterval(() => loadTargets().catch(() => {}), 4000);
+</script>
+</body>
+</html>

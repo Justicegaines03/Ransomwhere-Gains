@@ -2,6 +2,7 @@
 //   bun run setup [--fresh]   create demo wallets, fund gas, hand the registry to the agent, write the ransom note
 //   bun run clean-deposit     baseline: a clean wallet deposits at the exchange and is credited
 //   bun run incident          victim pays the ransom; attacker splits it, merges it, moves it to a cash-out wallet
+//   bun run src/stage.ts pay | launder   the same incident as two separate steps (used by the demo UI)
 //   bun run cashout           the cash-out wallet tries to deposit at the exchange
 import {
   createPublicClient,
@@ -118,15 +119,19 @@ async function depositAtExchange(from: PrivateKeyAccount, amount: bigint, label:
 
 const HELD_TOPIC = keccak256(toBytes("DepositHeld(uint256,address,uint256,uint8)"));
 
-async function incident(w: Wallets) {
+/** The victim pays the ransom named in the note. */
+async function pay(w: Wallets) {
+  console.log("\n== Victim pays the ransom ==");
+  await confirm(await transferToken(w.victim, w.ransom.address, RANSOM_AMOUNT), `victim -> ransom ${formatEther(RANSOM_AMOUNT)} dUSD`);
+}
+
+/** The attacker launders it: split across new wallets, recombine, move to a cash-out wallet. */
+async function launder(w: Wallets) {
   const hops = [w.hop1, w.hop2, w.hop3, w.hop4].slice(0, HOP_COUNT);
   const share = RANSOM_AMOUNT / BigInt(HOP_COUNT);
 
-  console.log("\n== Victim pays the ransom ==");
-  await confirm(await transferToken(w.victim, w.ransom.address, RANSOM_AMOUNT), `victim -> ransom ${formatEther(RANSOM_AMOUNT)} dUSD`);
-
   console.log("\n== Attacker splits it across new wallets ==");
-  let n = await pub.getTransactionCount({ address: w.ransom.address, blockTag: "pending" });
+  const n = await pub.getTransactionCount({ address: w.ransom.address, blockTag: "pending" });
   const splits = await Promise.all(hops.map((h, i) => transferToken(w.ransom, h.address, share, n + i)));
   for (const [i, h] of splits.entries()) await confirm(h, `ransom -> hop${i + 1} ${formatEther(share)} dUSD`);
 
@@ -138,7 +143,25 @@ async function incident(w: Wallets) {
   const last = await confirm(await transferToken(w.merge, w.cashout.address, RANSOM_AMOUNT), `merge -> cashout ${formatEther(RANSOM_AMOUNT)} dUSD`);
 
   await Bun.write(STATE_FILE, JSON.stringify({ lastHopBlock: last.blockNumber.toString(), lastHopAt: Date.now() }, null, 2));
-  log("incident staged. Watch the agent, then run: bun run cashout");
+  log("laundering staged. Watch the agent, then run: bun run cashout");
+}
+
+/** Both steps in one command (the original CLI demo). */
+async function incident(w: Wallets) {
+  await pay(w);
+  await launder(w);
+}
+
+/** Top up an external victim wallet (e.g. a MetaMask account) so it can pay the ransom itself. */
+async function fund(w: Wallets, addr: string | undefined) {
+  if (!addr || !/^0x[0-9a-fA-F]{40}$/.test(addr)) throw new Error("usage: bun run src/stage.ts fund <address>");
+  const to = addr as `0x${string}`;
+  if (to.toLowerCase() === w.funder.address.toLowerCase()) throw new Error("that address is the onramp itself");
+  const bal = (await pub.readContract({ address: ADDRESSES.token, abi: ABI.token, functionName: "balanceOf", args: [to] })) as bigint;
+  if (bal < RANSOM_AMOUNT) await confirm(await transferToken(w.funder, to, RANSOM_AMOUNT - bal), `victim wallet receives ${formatEther(RANSOM_AMOUNT - bal)} dUSD`);
+  const gas = await pub.getBalance({ address: to });
+  if (gas < parseEther("0.1")) await confirm(await wallet(w.funder).sendTransaction({ to, value: parseEther("0.3") - gas }), "victim wallet gas funded");
+  log(`victim wallet ${to} ready`);
 }
 
 /** Response action: compliance review clears a held deposit (false positive). Signed by the exchange owner (funder). */
@@ -166,9 +189,12 @@ const w = await loadWallets({ create: cmd === "setup", fresh });
 if (cmd === "setup") await setup(w);
 else if (cmd === "clean") await depositAtExchange(w.clean, D(100), "clean wallet");
 else if (cmd === "incident") await incident(w);
+else if (cmd === "pay") await pay(w);
+else if (cmd === "fund") await fund(w, process.argv[3]);
+else if (cmd === "launder") await launder(w);
 else if (cmd === "cashout") await depositAtExchange(w.cashout, RANSOM_AMOUNT, "cash-out wallet");
 else if (cmd === "release") await release(w, process.argv[3]);
 else {
-  console.error("usage: bun run src/stage.ts setup [--fresh] | clean | incident | cashout | release <depositId>");
+  console.error("usage: bun run src/stage.ts setup [--fresh] | clean | pay | launder | incident | cashout | release <depositId>");
   process.exit(1);
 }

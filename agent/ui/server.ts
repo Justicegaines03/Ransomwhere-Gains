@@ -80,6 +80,8 @@ const STAGES: Record<string, string[]> = {
   clean: ["bun", "run", "src/stage.ts", "clean"],
   incident: ["bun", "run", "src/stage.ts", "incident"],
   cashout: ["bun", "run", "src/stage.ts", "cashout"],
+  pay: ["bun", "run", "src/stage.ts", "pay"],
+  launder: ["bun", "run", "src/stage.ts", "launder"],
 };
 
 /**
@@ -99,8 +101,15 @@ async function needsFreshWallets(): Promise<boolean> {
   }
 }
 
+/** A victim who pays from their own wallet (MetaMask) replaces the generated victim in the console until the next reset. */
+let victimOverride: string | null = null;
+
 async function runStage(name: string, arg?: string) {
-  let cmd = name === "release" && arg && /^\d+$/.test(arg) ? ["bun", "run", "src/stage.ts", "release", arg] : STAGES[name];
+  let cmd =
+    name === "release" && arg && /^\d+$/.test(arg) ? ["bun", "run", "src/stage.ts", "release", arg]
+    : name === "fund" && arg && /^0x[0-9a-fA-F]{40}$/.test(arg) ? ["bun", "run", "src/stage.ts", "fund", arg]
+    : STAGES[name];
+  if (name === "setup") victimOverride = null;
   if (!cmd) return { ok: false, error: "unknown step" };
   if (stageProc) return { ok: false, error: `"${stageName}" is still running` };
   if (name === "setup" && !(await needsFreshWallets())) cmd = cmd.filter((a) => a !== "--fresh");
@@ -136,6 +145,7 @@ async function readState() {
   try {
     const w = await loadWallets();
     wallets = Object.fromEntries([...ROLES, "funder" as const].map((r) => [r, w[r].address]));
+    if (victimOverride) wallets.victim = victimOverride;
   } catch {
     // no demo wallets yet: the UI shows "Reset demo" first
   }
@@ -221,6 +231,7 @@ async function transferWatcher() {
 
 // ---------- HTTP ----------
 const html = Bun.file(new URL("./index.html", import.meta.url));
+const PAGES: Record<string, string> = { "/victim": "victim.html", "/exchange": "exchange.html" };
 const ADDR = /^0x[0-9a-fA-F]{40}$/;
 
 Bun.serve({
@@ -232,6 +243,7 @@ Bun.serve({
     const path = url.pathname;
 
     if (path === "/") return new Response(html, { headers: { "content-type": "text/html; charset=utf-8" } });
+    if (PAGES[path]) return new Response(Bun.file(new URL("./" + PAGES[path], import.meta.url)), { headers: { "content-type": "text/html; charset=utf-8" } });
 
     if (path === "/api/events") {
       let ctrl: ReadableStreamDefaultController<Uint8Array>;
@@ -252,6 +264,14 @@ Bun.serve({
     if (path === "/api/state") return Response.json({ ...state, agentRunning: agentProc !== null, stageRunning: stageName });
 
     if (req.method === "POST" && path.startsWith("/api/run/")) return Response.json(await runStage(path.slice("/api/run/".length)));
+    if (req.method === "POST" && /^\/api\/fund-victim\/0x[0-9a-fA-F]{40}$/.test(path)) {
+      const addr = path.split("/").pop()!;
+      const w = await loadWallets().catch(() => null);
+      if (w && addr.toLowerCase() === w.funder.address.toLowerCase()) return Response.json({ ok: false, error: "That account is the demo onramp. Switch to another MetaMask account." });
+      const res = await runStage("fund", addr);
+      if (res.ok) victimOverride = addr;
+      return Response.json(res);
+    }
     if (req.method === "POST" && /^\/api\/release\/\d+$/.test(path)) return Response.json(await runStage("release", path.split("/").pop()));
 
     // all threat reports on disk (current + earlier runs), summarized for the Threats list
