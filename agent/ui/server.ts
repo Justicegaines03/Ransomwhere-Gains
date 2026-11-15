@@ -91,11 +91,14 @@ const STAGES: Record<string, string[]> = {
 async function needsFreshWallets(): Promise<boolean> {
   try {
     const w = await loadWallets();
-    const [ransomNonce, cashVerdict] = await Promise.all([
+    // "Used" = the ransom wallet has received or sent anything, or any verdict exists for it or the cash-out wallet.
+    const [ransomNonce, ransomBal, ransomVerdict, cashVerdict] = await Promise.all([
       pub.getTransactionCount({ address: w.ransom.address }),
+      pub.readContract({ address: ADDRESSES.token, abi: ABI.token, functionName: "balanceOf", args: [w.ransom.address] }) as Promise<bigint>,
+      pub.readContract({ address: ADDRESSES.registry, abi: ABI.registry, functionName: "verdictOf", args: [w.ransom.address] }) as Promise<number>,
       pub.readContract({ address: ADDRESSES.registry, abi: ABI.registry, functionName: "verdictOf", args: [w.cashout.address] }) as Promise<number>,
     ]);
-    return ransomNonce > 0 || Number(cashVerdict) !== 0;
+    return ransomNonce > 0 || ransomBal > 0n || Number(ransomVerdict) !== 0 || Number(cashVerdict) !== 0;
   } catch {
     return true; // no wallets yet
   }
