@@ -36,6 +36,8 @@ forge script script/Deploy.s.sol --rpc-url monad_testnet --private-key $PRIVATE_
 
 | Contract | Address |
 |---|---|
-| DemoToken | _tbd_ |
-| VerdictRegistry | _tbd_ |
-| DemoExchange | _tbd_ |
+| DemoToken (dUSD) | [`0x4c5a52AB5bb8589fE576c940fD23F07Bb1D97B5D`](https://testnet.monadexplorer.com/address/0x4c5a52AB5bb8589fE576c940fD23F07Bb1D97B5D) |
+| VerdictRegistry | [`0x3525Bd36afB988f8cFeBB95e2C15Af1ee202F8c9`](https://testnet.monadexplorer.com/address/0x3525Bd36afB988f8cFeBB95e2C15Af1ee202F8c9) |
+| DemoExchange | [`0xD307DE57992B1b01cd95Ce7E38b15251D881950A`](https://testnet.monadexplorer.com/address/0xD307DE57992B1b01cd95Ce7E38b15251D881950A) |
+
+Agent / exchange owner (pilot): `0x489D04aE2c40755c3328EeC03f1407B251220632`
