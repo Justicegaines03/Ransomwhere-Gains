@@ -48,7 +48,7 @@ Agent / exchange owner (pilot): `0x489D04aE2c40755c3328EeC03f1407B251220632`
 cd agent && bun run ui     # http://127.0.0.1:4545
 ```
 
-A wallet EDR console. The **Simulation** bar runs the same commands as the CLI below: **Reset wallets** (fresh wallets only when the current ones were used), **Start agent**, **Clean deposit**, **Run incident**, **Attempt cash-out**.
+A wallet EDR console. The **Simulation** bar runs the same commands as the CLI below: **Reset wallets** (fresh wallets only when the current ones were used), **Start agent**, **Clean deposit**, **Victim pays**, **Attacker launders**, **Attempt cash-out**.
 
 | Console view | What it shows |
 |---|---|
@@ -61,10 +61,23 @@ A wallet EDR console. The **Simulation** bar runs the same commands as the CLI b
 
 Run only one agent at a time (UI or CLI). Earlier UI versions are tagged `v3-console` (first console) and `v2-ui-simple`. KPIs count the current trail only.
 
+### Sender views
+
+The console shows the defender’s telemetry. Two more pages show what the people moving the money see:
+
+| Page | Who | What happens |
+|---|---|---|
+| `/victim` | The ransomware victim | A staged ransom screen (labelled as a simulation). **Connect MetaMask** tops the connected account up to 1,000 dUSD from the demo onramp, then **Send payment** is a real ERC-20 transfer to the ransom wallet, approved in MetaMask. That account becomes the Victim in the console until the next reset. A link pays from a built-in demo wallet if MetaMask is not available. Do not connect the onramp account itself (it is refused). |
+| `/exchange` | Everyday user, or the attacker’s cash-out wallet (`?as=cashout`) | A deposit page. The everyday user’s deposit is credited; the attacker’s is put on hold “under compliance review”. |
+
+Suggested flow: `/exchange` (everyday user deposits, credited) → `/victim` (pay with MetaMask) → console (ransom wallet flagged about a second later) → **Attacker launders** → `/exchange?as=cashout` (on hold) → console (Deposit held).
+
+The agent scans from the block where the current wallets were created (`agent/scan-from.json`, written by setup), so it starts instantly; `bun run src/agent.ts --full` rescans from the deploy block.
+
 **Before presenting:**
-1. Click **Reset wallets**. A used set of wallets gets replaced (about 3 MON from the funder); the agent restarts on its own.
-2. Wait for the agent badge to read **running** and the feed to show `watching dUSD` (about 20 s of history scan).
-3. Steps 1 and 2 show green ticks. Then run **Clean deposit → Run incident → Attempt cash-out**.
+1. Click **Reset wallets**. A used set of wallets gets replaced (about 1 MON from the funder); the agent restarts on its own.
+2. Wait for the agent badge to read **running** and the feed to show `watching dUSD` (a few seconds).
+3. Steps 1 and 2 show green ticks. Then run **Clean deposit → Victim pays → Attacker launders → Attempt cash-out** (or use the sender views above).
 4. Fallbacks if the testnet is slow: the screenshots in [`docs/screenshots/`](docs/screenshots/README.md), or the stable copy below.
 
 ## Fallback

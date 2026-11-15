@@ -62,7 +62,14 @@ async function timestampOf(n: bigint) {
 
 const transfers: Transfer[] = [];
 const seen = new Set<string>(); // txHash:logIndex — a chunk re-read after a lagging-node error must not double-count
+// Start where the current demo wallets were created; earlier wallets already have their verdicts onchain.
+// Scanning from the deploy block grows without bound (minutes after a few hours of 0.4s blocks). --full forces it.
 let nextBlock = DEPLOY_BLOCK;
+const scanFrom = Bun.file(new URL("../scan-from.json", import.meta.url));
+if (!process.argv.includes("--full") && (await scanFrom.exists())) {
+  const b = BigInt((await scanFrom.json()).block);
+  if (b > nextBlock) nextBlock = b;
+}
 
 async function pull(): Promise<number> {
   const head = await pub.getBlockNumber();
@@ -169,7 +176,7 @@ async function tick() {
   }
 }
 
-log(`agent ${w.agent.address} watching dUSD ${ADDRESSES.token} from block ${DEPLOY_BLOCK}`);
+log(`agent ${w.agent.address} watching dUSD ${ADDRESSES.token} from block ${nextBlock}`);
 await tick();
 if (!once) {
   for (;;) {

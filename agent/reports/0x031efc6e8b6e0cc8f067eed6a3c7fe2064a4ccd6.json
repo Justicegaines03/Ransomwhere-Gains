@@ -1,0 +1,28 @@
+{
+  "wallet": "0x031efc6e8b6e0cc8f067eed6a3c7fe2064a4ccd6",
+  "verdict": "MALICIOUS",
+  "behaviors": 32,
+  "matched": [
+    {
+      "behavior": "RANSOM_NOTE_EVIDENCE",
+      "title": "Named in a ransom note",
+      "source": "Offchain evidence attached by the reporter",
+      "detail": "Evidence fingerprint 0x5382b0adfe9587ce42c13bdfe894bd88ea3ddad9f1f7b647d003c6d0a3a4b607",
+      "txs": []
+    }
+  ],
+  "timeline": [
+    {
+      "time": "2026-11-15T22:14:42.000Z",
+      "direction": "in",
+      "counterparty": "0xaEd0893073Af4b3D171315551f895a46456a441A",
+      "amount": "1,000 dUSD",
+      "tx": "0x1aa8123e00994cb8cb038f7008268c0020406e52554d3740ff6e5468414d69d7"
+    }
+  ],
+  "evidenceHash": "0x5382b0adfe9587ce42c13bdfe894bd88ea3ddad9f1f7b647d003c6d0a3a4b607",
+  "chainId": 10143,
+  "generatedAt": "2026-11-15T22:14:43.360Z",
+  "reportHash": "0x9ddeaf35d5bdd9b84199c86daf2c44cec6134d4598caa6a3c3035f06104e1c48",
+  "verdictTx": "0x20b8e38346c6830f0a9d198f839c68960c9fbf2b1a858b8c6f1575f6d0b44f7b"
+}

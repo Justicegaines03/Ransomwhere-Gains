@@ -16,3 +16,5 @@ node_modules/
 # agent: generated demo wallets hold private keys
 agent/.wallets*.json
 agent/state.json
+
+agent/scan-from.json

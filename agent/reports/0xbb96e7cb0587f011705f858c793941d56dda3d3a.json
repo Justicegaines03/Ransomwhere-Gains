@@ -1,0 +1,72 @@
+{
+  "wallet": "0xbb96e7cb0587f011705f858c793941d56dda3d3a",
+  "verdict": "MALICIOUS",
+  "behaviors": 23,
+  "matched": [
+    {
+      "behavior": "RAPID_PASS_THROUGH",
+      "title": "Rapid pass-through",
+      "source": "FATF 2023 Countering Ransomware Financing; FATF 2020 VA Red Flags (rapid movement of funds) — to confirm",
+      "detail": "Forwarded 100.0% of a 250 dUSD receipt within 1s",
+      "txs": [
+        "0xf6af676ee06d450213e56d2c7451311629f4be5db84349c97b14b94427063cef",
+        "0xddd357c44e5fd684aa46e5023a82157eb314768a6f28c1feb180b6f2ca67815b"
+      ]
+    },
+    {
+      "behavior": "NEW_WALLET_CHAIN",
+      "title": "New-wallet chain",
+      "source": "FATF 2020 VA Red Flags (funds moved through newly created wallets) — to confirm",
+      "detail": "No history before receiving from 0xB43a…452C, which also had no history",
+      "txs": [
+        "0xf6af676ee06d450213e56d2c7451311629f4be5db84349c97b14b94427063cef"
+      ]
+    },
+    {
+      "behavior": "SPLIT_AND_MERGE",
+      "title": "Split and merge",
+      "source": "FATF 2023 Countering Ransomware Financing (layering via splitting and consolidation) — to confirm",
+      "detail": "0xb43a…452c split to 4 wallets; 4 recombined into 0x9ca2…4683",
+      "txs": [
+        "0xf6af676ee06d450213e56d2c7451311629f4be5db84349c97b14b94427063cef",
+        "0xd4adf0b28293372c4a37cdada093b00d23dc839b0ba336c928028bb4214e38e8",
+        "0x6de71d4d5cc58b39634626aedb70b88a7b0bbec67a141cb5231ae016536dd7b7",
+        "0xc624b79505a8b4228ce14c07ade022fb703ec086087c314b8f33a50a64043c0c",
+        "0xddd357c44e5fd684aa46e5023a82157eb314768a6f28c1feb180b6f2ca67815b",
+        "0xb14ab94546db6d61f909c7b5e0ad47320c551dffe81fb98461dfac6f06dbeeeb",
+        "0x71ed9694b8ed9e40aa8e97c361c62c8f0242598f33ed47e30c01619aa3245f0e",
+        "0x03a5951b56b1ceb0c8d7709ddc545d950fc3b2201cb83fa39fbaea0e8cd3c17e"
+      ]
+    },
+    {
+      "behavior": "TAINTED_BY_FLAGGED",
+      "title": "Received funds from a malicious wallet",
+      "source": "Downstream propagation (pilot rule)",
+      "detail": "Received 250 dUSD from malicious wallet 0xB43a…452C",
+      "txs": [
+        "0xf6af676ee06d450213e56d2c7451311629f4be5db84349c97b14b94427063cef"
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "time": "2026-11-15T22:12:45.000Z",
+      "direction": "in",
+      "counterparty": "0xB43aFb8Fe5d5D1C094c50454B8556d0D9629452C",
+      "amount": "250 dUSD",
+      "tx": "0xf6af676ee06d450213e56d2c7451311629f4be5db84349c97b14b94427063cef"
+    },
+    {
+      "time": "2026-11-15T22:12:46.000Z",
+      "direction": "out",
+      "counterparty": "0x9ca27960f927BC1452937Eb9Eea7b636b64D4683",
+      "amount": "250 dUSD",
+      "tx": "0xddd357c44e5fd684aa46e5023a82157eb314768a6f28c1feb180b6f2ca67815b"
+    }
+  ],
+  "evidenceHash": null,
+  "chainId": 10143,
+  "generatedAt": "2026-11-15T22:13:04.466Z",
+  "reportHash": "0x1f3e9ae352a2bc4c7f452595c0a93304ea8d2f73d909b8eb81d3d2b56daae5e8",
+  "verdictTx": "0xf9caae7ece6ec1a5818bde18dee0861701dee73ad664bf8fbd4eccee496ca881"
+}

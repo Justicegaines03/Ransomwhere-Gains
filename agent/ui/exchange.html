@@ -77,6 +77,7 @@ function render() {
   const role = $("#who").value, n = state.nodes[role];
   if (!n || !n.address) return;
   const mine = (state.deposits || []).filter(d => d.depositor.toLowerCase() === n.address.toLowerCase());
+  if (busy && mine.length && mine[mine.length - 1].id !== lastSeen) busy = false;
   $("#addr").textContent = n.address.slice(0, 10) + "…" + n.address.slice(-6);
   $("#amt").textContent = num(AMT[role]);
   $("#bal").textContent = n.balance != null ? num(n.balance) : "–";

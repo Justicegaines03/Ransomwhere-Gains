@@ -28,3 +28,10 @@ Held deposit: [`0x3488bc82…`](https://testnet.monadexplorer.com/tx/0x3488bc822
 | 9 | [09-console-laundering-matrix.jpg](09-console-laundering-matrix.jpg) | Laundering matrix for the cash-out wallet: matched behaviors by stage |
 
 Screenshots 5–6 show the first, simpler UI (tag `v2-ui-simple`).
+
+## Sender views
+
+| # | Screenshot | What it shows |
+|---|---|---|
+| 10 | [10-victim-ransom-screen.jpg](10-victim-ransom-screen.jpg) | `/victim`: the staged ransom screen. Connect MetaMask, then Send payment is a real transfer to the ransom wallet |
+| 11 | [11-exchange-deposit-on-hold.jpg](11-exchange-deposit-on-hold.jpg) | `/exchange?as=cashout`: what the attacker sees when the exchange holds the deposit |

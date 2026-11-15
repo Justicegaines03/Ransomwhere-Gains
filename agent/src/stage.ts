@@ -25,6 +25,7 @@ const RANSOM_AMOUNT = D(1_000);
 const HOP_COUNT = 4;
 
 const STATE_FILE = new URL("../state.json", import.meta.url);
+const SCAN_FROM_FILE = new URL("../scan-from.json", import.meta.url);
 // One note per ransom wallet: a new setup must never erase the evidence for an earlier incident.
 const noteFile = (ransom: string) => new URL(`../evidence/ransom-note-${ransom.toLowerCase().slice(0, 10)}.txt`, import.meta.url);
 
@@ -51,13 +52,18 @@ async function transferToken(from: PrivateKeyAccount, to: `0x${string}`, amount:
 
 async function setup(w: Wallets) {
   const f = w.funder;
+  // The agent only needs history from the moment these wallets were created (see agent.ts).
+  const scanFile = Bun.file(SCAN_FROM_FILE);
+  if (process.argv.includes("--fresh") || !(await scanFile.exists())) {
+    await Bun.write(SCAN_FROM_FILE, JSON.stringify({ block: (await pub.getBlockNumber()).toString() }) + "\n");
+  }
   log(`funder ${f.address}  MON ${formatEther(await pub.getBalance({ address: f.address }))}`);
 
   // 1. Gas for every demo wallet (sent with explicit nonces, then confirmed together)
   let nonce = await pub.getTransactionCount({ address: f.address, blockTag: "pending" });
   const gas: Hash[] = [];
   for (const r of ROLES) {
-    const target = r === "agent" ? parseEther("2") : parseEther("0.1");
+    const target = r === "agent" ? parseEther("0.6") : parseEther("0.06"); // a full run uses well under half of this
     const bal = await pub.getBalance({ address: w[r].address });
     if (bal >= target / 2n) continue;
     gas.push(await wallet(f).sendTransaction({ to: w[r].address, value: target - bal, nonce: nonce++ }));
