@@ -42,7 +42,23 @@ forge script script/Deploy.s.sol --rpc-url monad_testnet --private-key $PRIVATE_
 
 Agent / exchange owner (pilot): `0x489D04aE2c40755c3328EeC03f1407B251220632`
 
-## Run the demo
+## Demo UI (recommended for presenting)
+
+```bash
+cd agent && bun run ui     # http://127.0.0.1:4545
+```
+
+Buttons run the same commands as the CLI below: **Reset** (fresh wallets only when the current ones were used), **Start agent**, **Clean deposit**, **Run incident**, **Cash out**. Coins animate along the money path, wallets turn red as verdicts land, and the exchange shows DEPOSIT HELD. Click any wallet for its threat report. Run only one agent at a time (UI or CLI).
+
+## Fallback
+
+The working CLI demo is tagged `v1-cli-stable`. To get a separate, ready-to-run copy without touching this one:
+
+```bash
+bun scripts/fallback.ts      # -> ../Ransomwhere-Gains-stable at v1-cli-stable
+```
+
+## Run the demo (CLI)
 
 Needs [bun](https://bun.sh) and a funded test wallet in `.env` as `WALLET2_PRIVATE_KEY` (the deployer / onramp).
 

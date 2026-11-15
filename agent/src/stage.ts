@@ -24,7 +24,8 @@ const RANSOM_AMOUNT = D(1_000);
 const HOP_COUNT = 4;
 
 const STATE_FILE = new URL("../state.json", import.meta.url);
-export const NOTE_FILE = new URL("../evidence/ransom-note.txt", import.meta.url);
+// One note per ransom wallet: a new setup must never erase the evidence for an earlier incident.
+const noteFile = (ransom: string) => new URL(`../evidence/ransom-note-${ransom.toLowerCase().slice(0, 10)}.txt`, import.meta.url);
 
 const now = () => new Date().toISOString().slice(11, 23);
 const log = (msg: string) => console.log(`[${now()}] ${msg}`);
@@ -95,8 +96,8 @@ async function setup(w: Wallets) {
     "(Staged for the Ransomwhere-Gains demo on Monad testnet. Not a real attack.)",
     "",
   ].join("\n");
-  await Bun.write(NOTE_FILE, note);
-  log(`ransom note written: agent/evidence/ransom-note.txt  fingerprint ${keccak256(toBytes(note))}`);
+  await Bun.write(noteFile(w.ransom.address), note);
+  log(`ransom note written: agent/evidence/ransom-note-${w.ransom.address.toLowerCase().slice(0, 10)}.txt  fingerprint ${keccak256(toBytes(note))}`);
 
   console.log("\nDemo wallets:");
   for (const r of ROLES) console.log(`  ${r.padEnd(8)} ${w[r].address}`);

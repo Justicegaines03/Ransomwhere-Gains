@@ -11,3 +11,10 @@ Fallback visuals from the end-to-end rehearsal on Monad testnet (2026-11-15), in
 
 Terminal output in 1 and 2 is the real rehearsal output, restyled for readability; tx hashes in 2 are shortened except the held deposit.
 Held deposit: [`0x3488bc82…`](https://testnet.monadexplorer.com/tx/0x3488bc822ded14bf37fa5e0c59c3997f0f285e2f880ec0a7e131078afe232355) · 7-verdict batch: [`0x413941a1…`](https://testnet.monadexplorer.com/tx/0x413941a1affdcc4cd506d7d825c025a9467716b4573232439d9cf6024359b5ce)
+
+## Demo UI (`bun run ui`)
+
+| # | Screenshot | What it shows |
+|---|---|---|
+| 5 | [05-ui-incident-flagged.jpg](05-ui-incident-flagged.jpg) | After **Run incident**: every laundering wallet red, money edges lit, registry shows the last verdict, latency badge 3 s |
+| 6 | [06-ui-deposit-held.jpg](06-ui-deposit-held.jpg) | After **Cash out**: full-screen DEPOSIT HELD banner, deposits table HELD vs CREDITED |
