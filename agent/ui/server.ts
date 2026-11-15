@@ -99,8 +99,8 @@ async function needsFreshWallets(): Promise<boolean> {
   }
 }
 
-async function runStage(name: string) {
-  let cmd = STAGES[name];
+async function runStage(name: string, arg?: string) {
+  let cmd = name === "release" && arg && /^\d+$/.test(arg) ? ["bun", "run", "src/stage.ts", "release", arg] : STAGES[name];
   if (!cmd) return { ok: false, error: "unknown step" };
   if (stageProc) return { ok: false, error: `"${stageName}" is still running` };
   if (name === "setup" && !(await needsFreshWallets())) cmd = cmd.filter((a) => a !== "--fresh");
@@ -252,6 +252,21 @@ Bun.serve({
     if (path === "/api/state") return Response.json({ ...state, agentRunning: agentProc !== null, stageRunning: stageName });
 
     if (req.method === "POST" && path.startsWith("/api/run/")) return Response.json(await runStage(path.slice("/api/run/".length)));
+    if (req.method === "POST" && /^\/api\/release\/\d+$/.test(path)) return Response.json(await runStage("release", path.split("/").pop()));
+
+    // all threat reports on disk (current + earlier runs), summarized for the Threats list
+    if (path === "/api/reports") {
+      const { readdir } = await import("node:fs/promises");
+      const dir = new URL("../reports/", import.meta.url);
+      const files = (await readdir(dir)).filter((f) => /^0x[0-9a-f]{40}\.json$/.test(f));
+      const rows = await Promise.all(
+        files.map(async (f) => {
+          const j = await Bun.file(new URL(f, dir)).json();
+          return { wallet: j.wallet, verdict: j.verdict, behaviors: j.behaviors, matched: j.matched.map((m: { behavior: string }) => m.behavior), generatedAt: j.generatedAt, evidence: !!j.evidenceHash };
+        }),
+      );
+      return Response.json(rows.sort((a, b) => (a.generatedAt < b.generatedAt ? 1 : -1)));
+    }
 
     if (req.method === "POST" && path === "/api/agent/start") return Response.json({ ok: startAgent() });
     if (req.method === "POST" && path === "/api/agent/stop") {

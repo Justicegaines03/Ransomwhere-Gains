@@ -141,6 +141,24 @@ async function incident(w: Wallets) {
   log("incident staged. Watch the agent, then run: bun run cashout");
 }
 
+/** Response action: compliance review clears a held deposit (false positive). Signed by the exchange owner (funder). */
+async function release(w: Wallets, idArg: string | undefined) {
+  if (!idArg || !/^\d+$/.test(idArg)) throw new Error("usage: bun run src/stage.ts release <depositId>");
+  const id = BigInt(idArg);
+  const [depositor, amount, , status] = (await pub.readContract({
+    address: ADDRESSES.exchange,
+    abi: ABI.exchange,
+    functionName: "deposits",
+    args: [id],
+  })) as [string, bigint, number, number];
+  if (Number(status) !== 1) throw new Error(`deposit ${id} is not held (status ${status})`);
+  await confirm(
+    await wallet(w.funder).writeContract({ address: ADDRESSES.exchange, abi: ABI.exchange, functionName: "release", args: [id] }),
+    `deposit ${id} released: ${formatEther(amount)} dUSD credited to ${depositor}`,
+  );
+  console.log(`\n  >>> DEPOSIT RELEASED — reviewed as false positive\n`);
+}
+
 const cmd = process.argv[2];
 const fresh = process.argv.includes("--fresh");
 const w = await loadWallets({ create: cmd === "setup", fresh });
@@ -149,7 +167,8 @@ if (cmd === "setup") await setup(w);
 else if (cmd === "clean") await depositAtExchange(w.clean, D(100), "clean wallet");
 else if (cmd === "incident") await incident(w);
 else if (cmd === "cashout") await depositAtExchange(w.cashout, RANSOM_AMOUNT, "cash-out wallet");
+else if (cmd === "release") await release(w, process.argv[3]);
 else {
-  console.error("usage: bun run src/stage.ts setup [--fresh] | clean | incident | cashout");
+  console.error("usage: bun run src/stage.ts setup [--fresh] | clean | incident | cashout | release <depositId>");
   process.exit(1);
 }
