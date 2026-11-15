@@ -14,5 +14,5 @@ node_modules/
 .DS_Store
 
 # agent: generated demo wallets hold private keys
-agent/.wallets.json
+agent/.wallets*.json
 agent/state.json
