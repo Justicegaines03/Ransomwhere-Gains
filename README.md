@@ -1,15 +1,41 @@
-# Monad Blitz Toronto Submission Process
+# Ransomware Wallet Verdicts (working name)
 
-## Steps to prepare your project repo:
+**EDR for money:** behavior-based ransomware verdicts for wallets, published onchain so an exchange can hold a ransom before it is cashed out.
 
-1. Visit the `monad-blitz-toronto` repo (link [here](https://github.com/monad-developers/monad-blitz-toronto)) and fork it.
+Built at Monad Blitz on Monad testnet. Build plan: [`docs/build-plan.pdf`](docs/build-plan.pdf). Organizer submission steps: [`docs/blitz-submission-process.md`](docs/blitz-submission-process.md).
 
-![1.png](./screenshots/1.png)
+## Network
 
-2. Give it your project name, a one-liner description, make sure you are forking `main` branch and click `Create Fork`
+| | |
+|---|---|
+| Network | Monad testnet |
+| Chain ID | 10143 |
+| RPC | `https://testnet-rpc.monad.xyz` |
 
-![2.png](https://github.com/monad-developers/monad-blitz-denver/raw/main/screenshots/2.png?raw=true)
+## Setup
 
-3. In your fork you can make all the changes you want, add code of your project, create branches, add information to `README.md` , you can change anything and everything.
+```bash
+git clone --recurse-submodules <this repo>
+cp .env.example .env          # fill PRIVATE_KEY with a test-only wallet
+cd contracts
+forge build && forge test
+cast chain-id --rpc-url monad_testnet   # prints 10143
+```
 
-4. For next steps head to [Blitz Portal](https://blitz.devnads.com)
+`contracts/.env` is a symlink to the root `.env`, so Foundry picks up `MONAD_RPC_URL` and the `monad_testnet` alias in `foundry.toml` works.
+
+## Deploy
+
+```bash
+cd contracts
+source .env
+forge script script/Deploy.s.sol --rpc-url monad_testnet --private-key $PRIVATE_KEY --broadcast
+```
+
+## Deployed contracts
+
+| Contract | Address |
+|---|---|
+| DemoToken | _tbd_ |
+| VerdictRegistry | _tbd_ |
+| DemoExchange | _tbd_ |
