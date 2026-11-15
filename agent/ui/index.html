@@ -183,7 +183,7 @@ tr.old td{color:var(--dim)}
 .tl .ev.in:before{border-color:var(--warn)}.tl .ev.out:before{border-color:var(--bad)}.tl .ev.det:before{border-color:var(--accent);background:var(--accent)}
 .tl .time{color:var(--dim);font-family:var(--mono);font-size:11px}
 .tl b{font-weight:500}
-.resp{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(0,1fr);gap:12px}
+.resp{display:grid;grid-template-columns:1fr;gap:12px}
 .box{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--raise);min-width:0}
 .box h4{margin:0 0 8px;font-size:12.5px;font-weight:600}
 .box p{margin:0 0 10px;color:var(--muted)}
@@ -550,12 +550,12 @@ function depositEvent(d) {
   if (d.status === 1) { showBanner(false, "Threat mitigated", "Deposit held", sub); if (role) select(role, false); }
   else if (d.status === 0) showBanner(true, "No action needed", "Deposit credited", sub);
 }
-function showBanner(ok, k, big, sub) {
+function showBanner(ok, k, big, sub, ms) {
   const b = $("#banner"); b.classList.toggle("ok", ok);
   $("#bIcon").innerHTML = icon(ok ? "check" : "lock"); $("#bK").textContent = k; $("#bBig").textContent = big; $("#bSub").innerHTML = sub;
   showTab("trail");
   b.style.display = "grid"; const c = b.querySelector(".b"); c.style.animation = "none"; void c.offsetWidth; c.style.animation = "";
-  clearTimeout(showBanner.t); showBanner.t = setTimeout(() => b.style.display = "none", ok ? 3500 : 7000);
+  clearTimeout(showBanner.t); showBanner.t = setTimeout(() => b.style.display = "none", ms || (ok ? 3500 : 7000));
 }
 function toast(t) { const x = $("#toast"); x.textContent = t; x.style.display = "block"; clearTimeout(toast.t); toast.t = setTimeout(() => x.style.display = "none", 3500); }
 
@@ -580,7 +580,7 @@ function feedLine(ev) {
   if (m && ev.at < incidentUntil) $("#kTtv").innerHTML = `${m[1]}<small>s after last hop</small>`;
   if (fresh && /released|rolled back/.test(ev.line)) detailKey = "";
   const rb = fresh && ev.line.match(/rolled back: ([\d.,]+) dUSD returned to victim (0x[0-9a-fA-F]{40})/);
-  if (rb) showBanner(true, "Rollback complete", "Funds returned", `<b>${Number(rb[1]).toLocaleString("en-US")} dUSD</b> sent back to ${who(rb[2])} · the attacker receives nothing`);
+  if (rb) showBanner(true, "Rollback complete", "Funds returned", `<b>${Number(rb[1]).toLocaleString("en-US")} dUSD</b> sent back to ${who(rb[2])} · the attacker receives nothing`, 9000);
 }
 
 // ---------- navigation ----------

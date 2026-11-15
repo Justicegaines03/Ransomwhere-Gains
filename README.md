@@ -38,7 +38,8 @@ forge script script/Deploy.s.sol --rpc-url monad_testnet --private-key $PRIVATE_
 |---|---|
 | DemoToken (dUSD) | [`0x4c5a52AB5bb8589fE576c940fD23F07Bb1D97B5D`](https://testnet.monadexplorer.com/address/0x4c5a52AB5bb8589fE576c940fD23F07Bb1D97B5D) |
 | VerdictRegistry | [`0x3525Bd36afB988f8cFeBB95e2C15Af1ee202F8c9`](https://testnet.monadexplorer.com/address/0x3525Bd36afB988f8cFeBB95e2C15Af1ee202F8c9) |
-| DemoExchange | [`0xD307DE57992B1b01cd95Ce7E38b15251D881950A`](https://testnet.monadexplorer.com/address/0xD307DE57992B1b01cd95Ce7E38b15251D881950A) |
+| DemoExchange (with rollback) | [`0xbd1e7D8Cd4b8D70D9B1A545a44cf5bE26958BfE1`](https://testnet.monadexplorer.com/address/0xbd1e7D8Cd4b8D70D9B1A545a44cf5bE26958BfE1) |
+| DemoExchange (first version, no rollback) | `0xD307DE57992B1b01cd95Ce7E38b15251D881950A` |
 
 Agent / exchange owner (pilot): `0x489D04aE2c40755c3328EeC03f1407B251220632`
 
@@ -52,14 +53,26 @@ A wallet EDR console. The **Simulation** bar runs the same commands as the CLI b
 
 | Console view | What it shows |
 |---|---|
-| KPIs | Wallets monitored, active threats, funds held, time to verdict, clean deposits credited |
+| KPIs | Wallets monitored, active threats, funds held, time to verdict, funds returned to victims |
 | Threats | Every flagged wallet: confidence, classification (ransom wallet, layering hop, consolidation, cash-out), mitigation status; earlier runs on demand |
 | Money Trail | The incident as one attack chain rooted at the ransom wallet: coins move per transfer, wallets turn red as verdicts land, DEPOSIT HELD when the exchange contains it |
 | Laundering Matrix | AML stages (Evidence, Placement, Layering, Propagation, Integration) x our behaviors, like an ATT&CK matrix: lit cells fired for the selected wallet |
 | Timeline | The selected wallet's money movements and its onchain verdict, in order |
-| Response | Held deposits with a **Release funds** action for false positives (calls `DemoExchange.release`), report hash, evidence fingerprint, explorer links |
+| Response | Held deposits with **Roll back to victim** (`DemoExchange.rollback`) and **Release to depositor** for false positives (`DemoExchange.release`), report hash, evidence fingerprint, explorer links |
 
 Run only one agent at a time (UI or CLI). Earlier UI versions are tagged `v3-console` (first console) and `v2-ui-simple`. KPIs count the current trail only.
+
+### Rollback
+
+Endpoint tools can roll a machine back because their agent sits where the files live. A blockchain transfer cannot be reversed, but the equivalent exists at the one place this system has the same control: the exchange that is holding the deposit.
+
+- The attacker’s deposit is held in the exchange contract, so the money has not left reach.
+- The threat report for the ransom wallet already records who paid it. That wallet is the victim.
+- **Roll back to victim** (console, Response tab) calls `DemoExchange.rollback(depositId, victim)`: the held funds go back to the victim’s wallet in one transaction, and the attacker is credited nothing.
+
+CLI: `bun run src/stage.ts rollback <depositId>`. Tested on testnet: deposit status RolledBack, victim balance back to 1,000 dUSD, exchange balance 0.
+
+Limits, stated plainly: rollback only works for funds that reach a contract which checks the registry and can hold them. Money that goes to a venue that does not check is out of reach. In this pilot the exchange owner decides; a real deployment needs a review and appeal process before funds move.
 
 ### Sender views
 
@@ -70,7 +83,7 @@ The console shows the defender’s telemetry. Two more pages show what the peopl
 | `/victim` | The ransomware victim | A staged ransom screen (labelled as a simulation). **Connect MetaMask** tops the connected account up to 1,000 dUSD from the demo onramp, then **Send payment** is a real ERC-20 transfer to the ransom wallet, approved in MetaMask. That account becomes the Victim in the console until the next reset. A link pays from a built-in demo wallet if MetaMask is not available. Do not connect the onramp account itself (it is refused). |
 | `/exchange` | Everyday user, or the attacker’s cash-out wallet (`?as=cashout`) | A deposit page. The everyday user’s deposit is credited; the attacker’s is put on hold “under compliance review”. |
 
-Suggested flow: `/exchange` (everyday user deposits, credited) → `/victim` (pay with MetaMask) → console (ransom wallet flagged about a second later) → **Attacker launders** → `/exchange?as=cashout` (on hold) → console (Deposit held).
+Suggested flow: `/exchange` (everyday user deposits, credited) → `/victim` (pay with MetaMask) → console (ransom wallet flagged about a second later) → **Attacker launders** → `/exchange?as=cashout` (on hold) → console (Deposit held) → Response tab → **Roll back to victim** → the victim’s wallet (MetaMask) shows the 1,000 dUSD again.
 
 The agent scans from the block where the current wallets were created (`agent/scan-from.json`, written by setup), so it starts instantly; `bun run src/agent.ts --full` rescans from the deploy block.
 

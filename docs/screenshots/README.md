@@ -35,3 +35,10 @@ Screenshots 5–6 show the first, simpler UI (tag `v2-ui-simple`).
 |---|---|---|
 | 10 | [10-victim-ransom-screen.jpg](10-victim-ransom-screen.jpg) | `/victim`: the staged ransom screen. Connect MetaMask, then Send payment is a real transfer to the ransom wallet |
 | 11 | [11-exchange-deposit-on-hold.jpg](11-exchange-deposit-on-hold.jpg) | `/exchange?as=cashout`: what the attacker sees when the exchange holds the deposit |
+
+## Rollback
+
+| # | Screenshot | What it shows |
+|---|---|---|
+| 12 | [12-console-response-rollback-action.jpg](12-console-response-rollback-action.jpg) | Response tab on the held cash-out deposit: **Roll back to victim** |
+| 13 | [13-console-rolled-back.jpg](13-console-rolled-back.jpg) | After the rollback: funds held 0, returned to victims 1,000 dUSD, cash-out wallet status Rolled back |
