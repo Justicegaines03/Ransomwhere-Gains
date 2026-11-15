@@ -59,16 +59,24 @@ async function setup(w: Wallets) {
   }
   log(`funder ${f.address}  MON ${formatEther(await pub.getBalance({ address: f.address }))}`);
 
-  // 1. Gas for every demo wallet (sent with explicit nonces, then confirmed together)
+  // 1. Gas for every demo wallet.
+  // Seen on testnet: with the funder near Monad’s 10 MON reserve, value transfers sent back-to-back revert.
+  // Below 15 MON, send one at a time and let a few blocks pass between them; above it, batch for speed.
+  const slow = (await pub.getBalance({ address: f.address })) < parseEther("15");
   let nonce = await pub.getTransactionCount({ address: f.address, blockTag: "pending" });
   const gas: Hash[] = [];
   for (const r of ROLES) {
     const target = r === "agent" ? parseEther("0.6") : parseEther("0.06"); // a full run uses well under half of this
     const bal = await pub.getBalance({ address: w[r].address });
     if (bal >= target / 2n) continue;
-    gas.push(await wallet(f).sendTransaction({ to: w[r].address, value: target - bal, nonce: nonce++ }));
+    const h = await wallet(f).sendTransaction({ to: w[r].address, value: target - bal, nonce: nonce++ });
+    if (slow) {
+      await confirm(h, `gas funded (${r})`);
+      await Bun.sleep(2500);
+    } else gas.push(h);
   }
   for (const h of gas) await confirm(h, "gas funded");
+  if (slow) await Bun.sleep(2500);
 
   // 2. The registry's writer becomes the dedicated agent wallet
   const current = (await pub.readContract({ address: ADDRESSES.registry, abi: ABI.registry, functionName: "agent" })) as string;
@@ -166,6 +174,7 @@ async function fund(w: Wallets, addr: string | undefined) {
   const bal = (await pub.readContract({ address: ADDRESSES.token, abi: ABI.token, functionName: "balanceOf", args: [to] })) as bigint;
   if (bal < RANSOM_AMOUNT) await confirm(await transferToken(w.funder, to, RANSOM_AMOUNT - bal), `victim wallet receives ${formatEther(RANSOM_AMOUNT - bal)} dUSD`);
   const gas = await pub.getBalance({ address: to });
+  if (gas < parseEther("0.1")) await Bun.sleep(2500); // same reserve rule: keep the value transfer apart from the token transfer
   if (gas < parseEther("0.1")) await confirm(await wallet(w.funder).sendTransaction({ to, value: parseEther("0.3") - gas }), "victim wallet gas funded");
   log(`victim wallet ${to} ready`);
 }
