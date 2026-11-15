@@ -1,6 +1,6 @@
 # Ransomwhere-Gains
 
-**EDR for money:** behavior-based ransomware verdicts for wallets, published onchain so an exchange can hold a ransom before it is cashed out.
+**EDR for blockchain:** behavior-based ransomware verdicts for wallets, published onchain so an exchange can hold a ransom before it is cashed out.
 
 Built at Monad Blitz on Monad testnet. Build plan: [`docs/build-plan.pdf`](docs/build-plan.pdf). Organizer submission steps: [`docs/blitz-submission-process.md`](docs/blitz-submission-process.md).
 
