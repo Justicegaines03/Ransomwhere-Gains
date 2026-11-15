@@ -50,6 +50,12 @@ cd agent && bun run ui     # http://127.0.0.1:4545
 
 Buttons run the same commands as the CLI below: **Reset** (fresh wallets only when the current ones were used), **Start agent**, **Clean deposit**, **Run incident**, **Cash out**. Coins animate along the money path, wallets turn red as verdicts land, and the exchange shows DEPOSIT HELD. Click any wallet for its threat report. Run only one agent at a time (UI or CLI).
 
+**Before presenting:**
+1. Click **Reset**. A used set of wallets gets replaced (about 3 MON from the funder); the agent restarts on its own.
+2. Wait for the agent badge to read **running** and the feed to show `watching dUSD` (about 20 s of history scan).
+3. Steps 0 and 1 show green ticks. Then run **Clean deposit → Run incident → Cash out**.
+4. Fallbacks if the testnet is slow: the screenshots in [`docs/screenshots/`](docs/screenshots/README.md), or the stable copy below.
+
 ## Fallback
 
 The working CLI demo is tagged `v1-cli-stable`. To get a separate, ready-to-run copy without touching this one:
