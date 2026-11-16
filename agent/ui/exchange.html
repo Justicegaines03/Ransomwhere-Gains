@@ -55,7 +55,7 @@ button[disabled]{background:#c9ced6;cursor:not-allowed}
     <div class="muted">Wallet balance <b id="bal">–</b> dUSD</div>
     <button id="connect" style="display:none">Connect MetaMask</button>
     <button id="dep" disabled>Deposit</button>
-    <div class="muted" id="demoRow" style="margin-top:10px;display:none">No MetaMask? <a href="#" id="demo">Use the built-in demo wallet</a></div>
+    <div class="muted" id="demoRow" style="margin-top:10px;display:none"><a href="#" id="switch">Use a different MetaMask account</a> · No MetaMask? <a href="#" id="demo">Use the built-in demo wallet</a></div>
     <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
   </section>
   <section class="card">
@@ -88,6 +88,7 @@ function render() {
   const r = role(), isUser = r === "clean";
   // the everyday user is the connected MetaMask account; the attacker is the staged cash-out wallet
   const n = isUser && account ? { address: account, balance: (state.nodes.clean.address || "").toLowerCase() === account.toLowerCase() ? state.nodes.clean.balance : null } : state.nodes[r];
+  if (isUser && !account) { $("#addr").textContent = "not connected"; $("#amt").textContent = num(AMT[r]); $("#bal").textContent = "–"; $("#connect").style.display = "block"; $("#demoRow").style.display = "block"; $("#dep").style.display = "none"; return; }
   $("#connect").style.display = isUser && !account ? "block" : "none";
   $("#demoRow").style.display = isUser ? "block" : "none";
   if (!n || !n.address) return;
@@ -133,6 +134,8 @@ $("#connect").addEventListener("click", async () => {
   if (!eth()) return show("hold", "MetaMask not found", "Open this page in the browser where MetaMask is installed, or use the built-in demo wallet.");
   try {
     $("#connect").disabled = true; $("#connect").textContent = "Connecting…";
+    // always open MetaMask’s account picker: it otherwise returns whichever account was last connected to this site
+    try { await eth().request({ method:"wallet_requestPermissions", params:[{ eth_accounts:{} }] }); } catch (e) { if (e.code === 4001) throw e; }
     [account] = await eth().request({ method:"eth_requestAccounts" });
     try { await eth().request({ method:"wallet_switchEthereumChain", params:[{ chainId: CHAIN.chainId }] }); }
     catch (e) { if (e.code === 4902) await eth().request({ method:"wallet_addEthereumChain", params:[CHAIN] }); else throw e; }
@@ -185,6 +188,7 @@ $("#demo").addEventListener("click", async (ev) => {
   state = await getState(); render();
   depositFromServer("clean");
 });
+$("#switch").addEventListener("click", (ev) => { ev.preventDefault(); account = null; render(); $("#connect").click(); });
 if (eth()) eth().on?.("accountsChanged", (a) => { account = a[0] || null; render(); });
 
 const es = new EventSource("/api/events");
