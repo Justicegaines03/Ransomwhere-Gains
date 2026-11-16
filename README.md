@@ -81,7 +81,9 @@ The console shows the defender’s telemetry. Two more pages show what the peopl
 | Page | Who | What happens |
 |---|---|---|
 | `/victim` | The ransomware victim | A staged ransom screen (labelled as a simulation). **Connect MetaMask** tops the connected account up to 1,000 dUSD from the demo onramp, then **Send payment** is a real ERC-20 transfer to the ransom wallet, approved in MetaMask. That account becomes the Victim in the console until the next reset. A link pays from a built-in demo wallet if MetaMask is not available. Do not connect the onramp account itself (it is refused). |
-| `/exchange` | Everyday user, or the attacker’s cash-out wallet (`?as=cashout`) | A deposit page. The everyday user’s deposit is credited; the attacker’s is put on hold “under compliance review”. |
+| `/exchange` | Everyday user, or the attacker’s cash-out wallet (`?as=cashout`) | A deposit page. The everyday user clicks **Connect MetaMask** (the onramp tops the account up to 100 dUSD), then **Deposit** signs an approval and a deposit in MetaMask; it is credited. The attacker’s deposit is put on hold “under compliance review”. A link uses a built-in demo wallet if MetaMask is not available. |
+
+The same MetaMask account can be the everyday user and, later, the victim: one person who uses the exchange normally and then gets hit. The registration survives **Reset wallets**; the built-in demo wallet links switch back to generated wallets.
 
 Suggested flow: `/exchange` (everyday user deposits, credited) → `/victim` (pay with MetaMask) → console (ransom wallet flagged about a second later) → **Attacker launders** → `/exchange?as=cashout` (on hold) → console (Deposit held) → Response tab → **Roll back to victim** → the victim’s wallet (MetaMask) shows the 1,000 dUSD again.
 
