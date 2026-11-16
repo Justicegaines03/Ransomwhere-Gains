@@ -225,16 +225,17 @@ async function incident(w: Wallets) {
 }
 
 /** Top up an external victim wallet (e.g. a MetaMask account) so it can pay the ransom itself. */
-async function fund(w: Wallets, addr: string | undefined) {
-  if (!addr || !/^0x[0-9a-fA-F]{40}$/.test(addr)) throw new Error("usage: bun run src/stage.ts fund <address>");
+async function fund(w: Wallets, addr: string | undefined, dusd?: string) {
+  if (!addr || !/^0x[0-9a-fA-F]{40}$/.test(addr)) throw new Error("usage: bun run src/stage.ts fund <address> [dUSD amount]");
+  const want = dusd && /^\d+$/.test(dusd) ? D(Number(dusd)) : RANSOM_AMOUNT;
   const to = addr as `0x${string}`;
   if (to.toLowerCase() === w.funder.address.toLowerCase()) throw new Error("that address is the onramp itself");
   const bal = (await pub.readContract({ address: ADDRESSES.token, abi: ABI.token, functionName: "balanceOf", args: [to] })) as bigint;
-  if (bal < RANSOM_AMOUNT) await confirm(await transferToken(w.funder, to, RANSOM_AMOUNT - bal), `victim wallet receives ${formatEther(RANSOM_AMOUNT - bal)} dUSD`);
+  if (bal < want) await confirm(await transferToken(w.funder, to, want - bal), `external wallet receives ${formatEther(want - bal)} dUSD`);
   const gas = await pub.getBalance({ address: to });
   if (gas < parseEther("0.1")) await Bun.sleep(2500); // same reserve rule: keep the value transfer apart from the token transfer
-  if (gas < parseEther("0.1")) await confirm(await wallet(w.funder).sendTransaction({ to, value: parseEther("0.3") - gas }), "victim wallet gas funded");
-  log(`victim wallet ${to} ready`);
+  if (gas < parseEther("0.1")) await confirm(await wallet(w.funder).sendTransaction({ to, value: parseEther("0.3") - gas }), "external wallet gas funded");
+  log(`external wallet ${to} ready`);
 }
 
 /** Response action: compliance review clears a held deposit (false positive). Signed by the exchange owner (funder). */
@@ -285,7 +286,7 @@ if (cmd === "setup") await setup(w);
 else if (cmd === "clean") await depositAtExchange(w, w.clean, D(100), "clean wallet");
 else if (cmd === "incident") await incident(w);
 else if (cmd === "pay") await pay(w);
-else if (cmd === "fund") await fund(w, process.argv[3]);
+else if (cmd === "fund") await fund(w, process.argv[3], process.argv[4]);
 else if (cmd === "launder") await launder(w);
 else if (cmd === "cashout") await depositAtExchange(w, w.cashout, "all", "cash-out wallet");
 else if (cmd === "release") await release(w, process.argv[3]);

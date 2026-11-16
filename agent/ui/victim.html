@@ -108,7 +108,7 @@ async function loadTargets() {
   if (!s.ready) return s;
   explorer = s.explorer || explorer; token = s.addresses.token;
   const r = s.nodes.ransom && s.nodes.ransom.address;
-  if (r && r !== ransom) { ransom = r; $("#addr").textContent = ransom; $("#done").style.display = "none"; }
+  if (r && r !== ransom) { ransom = r; $("#addr").textContent = ransom; $("#done").style.display = "none"; paidOnce = false; $("#payBtn").textContent = "Send payment"; if (account) refreshWallet().catch(() => {}); }
   return s;
 }
 const eth = () => window.ethereum;
@@ -117,7 +117,7 @@ async function refreshWallet() {
   if (!account) return;
   const bal = await tokenBalance(account);
   $("#who").textContent = `MetaMask ${account.slice(0, 6)}…${account.slice(-4)} · balance ${num(bal)} dUSD`;
-  $("#payBtn").disabled = busy || bal < AMOUNT;
+  $("#payBtn").disabled = busy || (paidOnce && bal < AMOUNT);
   if (paidOnce && !busy && bal >= AMOUNT) { paidOnce = false; $("#payBtn").textContent = "Send payment"; note("Funds recovered.", "Ransomwhere-Gains rolled the payment back: 1,000 dUSD was returned to this wallet."); }
   return bal;
 }
@@ -150,8 +150,15 @@ $("#connect").addEventListener("click", async () => {
 
 $("#payBtn").addEventListener("click", async () => {
   try {
-    busy = true; $("#payBtn").disabled = true; $("#payBtn").textContent = "Confirm in MetaMask…";
+    busy = true; $("#payBtn").disabled = true; $("#payBtn").textContent = "Preparing…";
     await loadTargets();
+    // register this account as the victim (survives resets) and top it up to the ransom amount if it is short
+    const pj = await (await fetch("/api/fund-victim/" + account, { method:"POST" })).json();
+    if (!pj.ok) throw new Error(pj.error || "The demo server could not prepare the wallet");
+    await sleep(1200);
+    for (let i = 0; i < 60 && (await getState()).stageRunning; i++) await sleep(700);
+    for (let i = 0; i < 30 && (await tokenBalance(account)) < AMOUNT; i++) await sleep(500);
+    $("#payBtn").textContent = "Confirm in MetaMask…";
     const hash = await eth().request({ method:"eth_sendTransaction", params:[{ from: account, to: token, data:"0xa9059cbb" + pad(ransom) + pad(AMOUNT.toString(16)) }] });
     $("#payBtn").textContent = "Sending…";
     let rc = null;

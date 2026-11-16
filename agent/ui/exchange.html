@@ -53,7 +53,9 @@ button[disabled]{background:#c9ced6;cursor:not-allowed}
     <div class="muted">From wallet <span class="mono" id="addr">–</span></div>
     <div class="amount"><span id="amt">–</span><small>dUSD</small></div>
     <div class="muted">Wallet balance <b id="bal">–</b> dUSD</div>
+    <button id="connect" style="display:none">Connect MetaMask</button>
     <button id="dep" disabled>Deposit</button>
+    <div class="muted" id="demoRow" style="margin-top:10px;display:none">No MetaMask? <a href="#" id="demo">Use the built-in demo wallet</a></div>
     <div class="result" id="result"><b id="rT"></b><span id="rS"></span></div>
   </section>
   <section class="card">
@@ -69,47 +71,124 @@ button[disabled]{background:#c9ced6;cursor:not-allowed}
 const $ = (s) => document.querySelector(s);
 const num = (v) => (Number(BigInt(v) / 10n ** 14n) / 10000).toLocaleString("en-US");
 const AMT = { clean: 100n * 10n ** 18n, cashout: 1000n * 10n ** 18n };
-let state = null, busy = false, lastSeen = null;
+const CHAIN = { chainId:"0x279f", chainName:"Monad Testnet", nativeCurrency:{ name:"MON", symbol:"MON", decimals:18 }, rpcUrls:["https://testnet-rpc.monad.xyz"], blockExplorerUrls:["https://testnet.monadexplorer.com"] };
+const pad = (hex) => hex.replace(/^0x/, "").padStart(64, "0");
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const eth = () => window.ethereum;
+let state = null, busy = false, lastSeen = null, account = null, btnText = "";
 const params = new URLSearchParams(location.search);
 if (params.get("as") === "cashout") $("#who").value = "cashout";
+const role = () => $("#who").value;
+
+function show(kind, title, sub) { const r = $("#result"); r.className = "result " + kind; $("#rT").textContent = title; $("#rS").textContent = sub || ""; }
+function depositsFor(addr) { return (state.deposits || []).filter(d => d.depositor.toLowerCase() === addr.toLowerCase()); }
 
 function render() {
   if (!state || !state.ready) return;
-  const role = $("#who").value, n = state.nodes[role];
+  const r = role(), isUser = r === "clean";
+  // the everyday user is the connected MetaMask account; the attacker is the staged cash-out wallet
+  const n = isUser && account ? { address: account, balance: (state.nodes.clean.address || "").toLowerCase() === account.toLowerCase() ? state.nodes.clean.balance : null } : state.nodes[r];
+  $("#connect").style.display = isUser && !account ? "block" : "none";
+  $("#demoRow").style.display = isUser ? "block" : "none";
   if (!n || !n.address) return;
-  const mine = (state.deposits || []).filter(d => d.depositor.toLowerCase() === n.address.toLowerCase());
-  if (busy && mine.length && mine[mine.length - 1].id !== lastSeen) busy = false;
-  $("#addr").textContent = n.address.slice(0, 10) + "…" + n.address.slice(-6);
-  $("#amt").textContent = num(AMT[role]);
+  const mine = depositsFor(n.address);
+  if (busy && mine.length && mine[mine.length - 1].id !== lastSeen) { busy = false; btnText = ""; }
+  $("#addr").textContent = n.address.slice(0, 10) + "…" + n.address.slice(-6) + (isUser && account ? " (MetaMask)" : "");
+  $("#amt").textContent = num(AMT[r]);
   $("#bal").textContent = n.balance != null ? num(n.balance) : "–";
-  const can = n.balance != null && BigInt(n.balance) >= AMT[role];
-  $("#dep").disabled = busy || !!state.stageRunning || !can;
-  $("#dep").textContent = busy ? "Depositing…" : can ? `Deposit ${num(AMT[role])} dUSD` : mine.length ? "Deposited" : "Nothing to deposit yet";
+  const dep = $("#dep");
+  if (isUser && !account) { dep.style.display = "none"; }
+  else {
+    dep.style.display = "block";
+    const can = isUser ? true : n.balance != null && BigInt(n.balance) >= AMT[r];
+    dep.disabled = busy || !!state.stageRunning || !can;
+    dep.textContent = busy ? (btnText || "Depositing…") : can ? `Deposit ${num(AMT[r])} dUSD` : mine.length ? "Deposited" : "Nothing to deposit yet";
+  }
   const sum = (st) => mine.filter(d => st.includes(d.status)).reduce((s, d) => s + BigInt(d.amount), 0n);
   $("#avail").textContent = num(sum([0, 2])); $("#hold").textContent = num(sum([1]));
   $("#hist").innerHTML = mine.slice().reverse().map(d => `<tr><td>#${d.id}</td><td>${num(d.amount)} dUSD</td><td><span class="pill ${"chrx"[d.status]}">${["Credited","On hold","Released","Reversed"][d.status]}</span></td></tr>`).join("");
   $("#noHist").style.display = mine.length ? "none" : "block";
-  const last = mine[mine.length - 1], r = $("#result");
-  r.className = "result";
-  if (last) {
-    if (last.status === 3) { r.classList.add("rev"); $("#rT").textContent = "Deposit reversed"; $("#rS").textContent = `Your deposit of ${num(last.amount)} dUSD (ref #${last.id}) was returned to its original owner after a ransomware investigation.`; }
-    else if (last.status === 1) { r.classList.add("hold"); $("#rT").textContent = "Deposit on hold"; $("#rS").textContent = `Your deposit of ${num(last.amount)} dUSD (ref #${last.id}) is under compliance review. The funds are not available to trade or withdraw.`; }
-    else { r.classList.add("ok"); $("#rT").textContent = last.status === 2 ? "Deposit released" : "Deposit credited"; $("#rS").textContent = `${num(last.amount)} dUSD is available in your account (ref #${last.id}).`; }
-    if (busy && last.id !== lastSeen) busy = false;
+  const last = mine[mine.length - 1];
+  if (busy) return;
+  if (!last) { $("#result").className = "result"; return; }
+  if (last.status === 3) show("rev", "Deposit reversed", `Your deposit of ${num(last.amount)} dUSD (ref #${last.id}) was returned to its original owner after a ransomware investigation.`);
+  else if (last.status === 1) show("hold", "Deposit on hold", `Your deposit of ${num(last.amount)} dUSD (ref #${last.id}) is under compliance review. The funds are not available to trade or withdraw.`);
+  else show("ok", last.status === 2 ? "Deposit released" : "Deposit credited", `${num(last.amount)} dUSD is available in your account (ref #${last.id}).`);
+}
+
+async function getState() { return (await fetch("/api/state")).json(); }
+async function waitStage() { await sleep(1200); for (let i = 0; i < 60; i++) { const s = await getState(); if (!s.stageRunning) return s; await sleep(700); } }
+async function call(to, data) { return BigInt(await eth().request({ method:"eth_call", params:[{ to, data }, "latest"] })); }
+async function receipt(hash) { for (let i = 0; i < 80; i++) { const rc = await eth().request({ method:"eth_getTransactionReceipt", params:[hash] }); if (rc) return rc; await sleep(500); } return null; }
+/** Registers this MetaMask account as the everyday user and tops it up to 100 dUSD (plus gas) from the demo onramp. */
+async function prepare() {
+  const j = await (await fetch("/api/fund-user/" + account, { method:"POST" })).json();
+  if (!j.ok) throw new Error(j.error || "The demo server could not prepare the wallet");
+  await waitStage();
+  const token = state.addresses.token;
+  for (let i = 0; i < 30 && (await call(token, "0x70a08231" + pad(account))) < AMT.clean; i++) await sleep(500);
+}
+
+$("#connect").addEventListener("click", async () => {
+  if (!eth()) return show("hold", "MetaMask not found", "Open this page in the browser where MetaMask is installed, or use the built-in demo wallet.");
+  try {
+    $("#connect").disabled = true; $("#connect").textContent = "Connecting…";
+    [account] = await eth().request({ method:"eth_requestAccounts" });
+    try { await eth().request({ method:"wallet_switchEthereumChain", params:[{ chainId: CHAIN.chainId }] }); }
+    catch (e) { if (e.code === 4902) await eth().request({ method:"wallet_addEthereumChain", params:[CHAIN] }); else throw e; }
+    await prepare();
+  } catch (e) { account = null; show("hold", "Could not connect", e.message || String(e)); }
+  $("#connect").disabled = false; $("#connect").textContent = "Connect MetaMask";
+  state = await getState(); render();
+});
+
+async function depositWithMetaMask() {
+  const amt = AMT.clean, token = state.addresses.token, ex = state.addresses.exchange;
+  const before = depositsFor(account); lastSeen = before.length ? before[before.length - 1].id : null;
+  busy = true; btnText = "Preparing…"; render();
+  try {
+    await prepare();
+    btnText = "Approve in MetaMask…"; render();
+    const h1 = await eth().request({ method:"eth_sendTransaction", params:[{ from: account, to: token, data:"0x095ea7b3" + pad(ex) + pad(amt.toString(16)) }] });
+    const r1 = await receipt(h1);
+    if (!r1 || r1.status !== "0x1") throw new Error("The approval did not confirm");
+    // wait until the node MetaMask talks to has seen the approval, then skip its gas estimate for the deposit
+    for (let i = 0; i < 30 && (await call(token, "0xdd62ed3e" + pad(account) + pad(ex))) < amt; i++) await sleep(500);
+    btnText = "Confirm the deposit in MetaMask…"; render();
+    const h2 = await eth().request({ method:"eth_sendTransaction", params:[{ from: account, to: ex, data:"0xb6b55f25" + pad(amt.toString(16)), gas:"0x493e0" }] });
+    btnText = "Depositing…"; render();
+    const r2 = await receipt(h2);
+    if (!r2 || r2.status !== "0x1") throw new Error("The deposit did not confirm");
+    // render() clears busy when the new deposit shows up in the exchange state
+    setTimeout(() => { if (busy) { busy = false; btnText = ""; render(); } }, 15000);
+  } catch (e) {
+    busy = false; btnText = "";
+    show("hold", e.code === 4001 ? "Cancelled in MetaMask" : "Could not deposit", e.code === 4001 ? "" : (e.message || String(e)));
+    render();
   }
 }
-$("#who").addEventListener("change", () => { busy = false; render(); });
-$("#dep").addEventListener("click", async () => {
-  const role = $("#who").value, n = state.nodes[role];
-  const mine = (state.deposits || []).filter(d => d.depositor.toLowerCase() === n.address.toLowerCase());
-  lastSeen = mine.length ? mine[mine.length - 1].id : null;
-  busy = true; render();
-  try { const j = await (await fetch("/api/run/" + (role === "clean" ? "clean" : "cashout"), { method:"POST" })).json(); if (!j.ok) { busy = false; $("#rT").textContent = "Could not deposit"; $("#rS").textContent = j.error || ""; $("#result").className = "result hold"; } }
-  catch { busy = false; }
+
+async function depositFromServer(stage) {
+  const n = state.nodes[role()], before = depositsFor(n.address);
+  lastSeen = before.length ? before[before.length - 1].id : null;
+  busy = true; btnText = ""; render();
+  try { const j = await (await fetch("/api/run/" + stage, { method:"POST" })).json(); if (!j.ok) { busy = false; show("hold", "Could not deposit", j.error || ""); } }
+  catch { busy = false; show("hold", "Could not deposit", "The demo server is not responding."); }
   render();
+}
+
+$("#who").addEventListener("change", () => { busy = false; btnText = ""; render(); });
+$("#dep").addEventListener("click", () => role() === "clean" && account ? depositWithMetaMask() : depositFromServer(role() === "clean" ? "clean" : "cashout"));
+$("#demo").addEventListener("click", async (ev) => {
+  ev.preventDefault(); account = null;
+  await fetch("/api/use-demo-wallets", { method:"POST" }).catch(() => {});
+  state = await getState(); render();
+  depositFromServer("clean");
 });
+if (eth()) eth().on?.("accountsChanged", (a) => { account = a[0] || null; render(); });
+
 const es = new EventSource("/api/events");
-es.onmessage = (m) => { const ev = JSON.parse(m.data); if (ev.type === "state") { state = ev.state; render(); } else if (ev.type === "log" && /(clean|cashout) failed/.test(ev.line)) { busy = false; render(); } };
+es.onmessage = (m) => { const ev = JSON.parse(m.data); if (ev.type === "state") { state = ev.state; render(); } else if (ev.type === "log" && /(clean|cashout) failed/.test(ev.line)) { busy = false; btnText = ""; render(); } };
 </script>
 </body>
 </html>

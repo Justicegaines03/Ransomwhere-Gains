@@ -106,13 +106,15 @@ async function needsFreshWallets(): Promise<boolean> {
 
 /** A victim who pays from their own wallet (MetaMask) replaces the generated victim in the console until the next reset. */
 let victimOverride: string | null = null;
+/** Same idea for the everyday user on the exchange page. Both stay until the server restarts or the demo wallets are chosen again. */
+let cleanOverride: string | null = null;
 
-async function runStage(name: string, arg?: string) {
+async function runStage(name: string, arg?: string, arg2?: string) {
   let cmd =
     (name === "release" || name === "rollback") && arg && /^\d+$/.test(arg) ? ["bun", "run", "src/stage.ts", name, arg]
-    : name === "fund" && arg && /^0x[0-9a-fA-F]{40}$/.test(arg) ? ["bun", "run", "src/stage.ts", "fund", arg]
+    : name === "fund" && arg && /^0x[0-9a-fA-F]{40}$/.test(arg) ? ["bun", "run", "src/stage.ts", "fund", arg, arg2 === "100" ? "100" : "1000"]
     : STAGES[name];
-  if (name === "setup") victimOverride = null;
+  // overrides survive a reset: the same MetaMask account plays the user and the victim in every run
   if (!cmd) return { ok: false, error: "unknown step" };
   if (stageProc) return { ok: false, error: `"${stageName}" is still running` };
   if (name === "setup" && !(await needsFreshWallets())) cmd = cmd.filter((a) => a !== "--fresh");
@@ -149,6 +151,7 @@ async function readState() {
     const w = await loadWallets();
     wallets = Object.fromEntries([...ROLES, "funder" as const].map((r) => [r, w[r].address]));
     if (victimOverride) wallets.victim = victimOverride;
+    if (cleanOverride) wallets.clean = cleanOverride;
   } catch {
     // no demo wallets yet: the UI shows "Reset demo" first
   }
@@ -267,6 +270,19 @@ Bun.serve({
     if (path === "/api/state") return Response.json({ ...state, agentRunning: agentProc !== null, stageRunning: stageName });
 
     if (req.method === "POST" && path.startsWith("/api/run/")) return Response.json(await runStage(path.slice("/api/run/".length)));
+    if (req.method === "POST" && path === "/api/use-demo-wallets") {
+      victimOverride = null;
+      cleanOverride = null;
+      return Response.json({ ok: true });
+    }
+    if (req.method === "POST" && /^\/api\/fund-user\/0x[0-9a-fA-F]{40}$/.test(path)) {
+      const addr = path.split("/").pop()!;
+      const w = await loadWallets().catch(() => null);
+      if (w && addr.toLowerCase() === w.funder.address.toLowerCase()) return Response.json({ ok: false, error: "That account is the demo onramp. Switch to another MetaMask account." });
+      const res = await runStage("fund", addr, "100");
+      if (res.ok) cleanOverride = addr;
+      return Response.json(res);
+    }
     if (req.method === "POST" && /^\/api\/fund-victim\/0x[0-9a-fA-F]{40}$/.test(path)) {
       const addr = path.split("/").pop()!;
       const w = await loadWallets().catch(() => null);

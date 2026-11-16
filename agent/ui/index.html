@@ -509,7 +509,8 @@ function applyState(s) {
   const prevNodes = state && state.nodes;
   state = s; explorer = s.explorer || explorer;
   addrToRole = {};
-  for (const [r, n] of Object.entries(s.nodes || {})) if (n.address) addrToRole[n.address.toLowerCase()] = r;
+  // one person can be both the everyday user and the victim (same MetaMask account): the victim role wins the label
+  for (const [r, n] of Object.entries(s.nodes || {})) if (n.address && !addrToRole[n.address.toLowerCase()]) addrToRole[n.address.toLowerCase()] = r;
   for (const [role, ne] of Object.entries(nodeEls)) {
     const n = (s.nodes || {})[role] || {};
     ne.sub.textContent = role === "exchange" ? "checks registry" : (n.address ? short(n.address) : "");
@@ -546,7 +547,8 @@ function applyState(s) {
 }
 function depositEvent(d) {
   const role = addrToRole[d.depositor.toLowerCase()];
-  const sub = `<b>${dusd(d.amount)}</b> from ${who(d.depositor)} · registry verdict <b>${VNAME[d.verdict].toLowerCase()}</b>`;
+  const isUser = ((nodesOf().clean || {}).address || "").toLowerCase() === d.depositor.toLowerCase();
+  const sub = `<b>${dusd(d.amount)}</b> from ${isUser ? label("clean") : who(d.depositor)} · registry verdict <b>${VNAME[d.verdict].toLowerCase()}</b>`;
   if (d.status === 1) { showBanner(false, "Threat mitigated", "Deposit held", sub); if (role) select(role, false); }
   else if (d.status === 0) showBanner(true, "No action needed", "Deposit credited", sub);
 }
@@ -614,7 +616,13 @@ es.onmessage = (m) => {
   const ev = JSON.parse(m.data);
   if (ev.type === "state") applyState(ev.state);
   else if (ev.type === "log") feedLine(ev);
-  else if (ev.type === "transfer") { const from = addrToRole[ev.from.toLowerCase()], to = addrToRole[ev.to.toLowerCase()]; if (from && to) animateCoin(from, to, num(ev.value)); }
+  else if (ev.type === "transfer") {
+    let from = addrToRole[ev.from.toLowerCase()], to = addrToRole[ev.to.toLowerCase()];
+    const userAddr = ((nodesOf().clean || {}).address || "").toLowerCase();
+    if (to === "exchange" && ev.from.toLowerCase() === userAddr) from = "clean"; // a deposit by the everyday user
+    if (from === "exchange" && to === "clean") to = addrToRole[ev.to.toLowerCase()];
+    if (from && to) animateCoin(from, to, num(ev.value));
+  }
   else if (ev.type === "status") { fetch("/api/state").then(r => r.json()).then(applyState).catch(() => {}); loadReports(); }
 };
 es.onerror = () => { $("#agentTxt").textContent = "disconnected"; $("#agentDot").classList.remove("on"); };
