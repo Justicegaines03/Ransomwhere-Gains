@@ -136,7 +136,11 @@ $("#connect").addEventListener("click", async () => {
     $("#connect").disabled = true; $("#connect").textContent = "Connecting…";
     // always open MetaMask’s account picker: it otherwise returns whichever account was last connected to this site
     try { await eth().request({ method:"wallet_requestPermissions", params:[{ eth_accounts:{} }] }); } catch (e) { if (e.code === 4001) throw e; }
-    [account] = await eth().request({ method:"eth_requestAccounts" });
+    const accts = await eth().request({ method:"eth_requestAccounts" });
+    // the onramp wallet funds the demo and signs the server’s transactions, so it cannot also be the user
+    const onramp = (((await (await fetch("/api/state")).json()).nodes || {}).funder || {}).address || "";
+    account = accts.find((x) => x.toLowerCase() !== onramp.toLowerCase()) || null;
+    if (!account) throw new Error(`You picked ${accts[0].slice(0, 6)}…${accts[0].slice(-4)}, which is the demo’s onramp wallet. Click Connect again and tick a different account in MetaMask (for example the one ending 7F7D or 11cB).`);
     try { await eth().request({ method:"wallet_switchEthereumChain", params:[{ chainId: CHAIN.chainId }] }); }
     catch (e) { if (e.code === 4902) await eth().request({ method:"wallet_addEthereumChain", params:[CHAIN] }); else throw e; }
     await prepare();
